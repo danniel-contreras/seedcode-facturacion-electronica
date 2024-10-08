@@ -2,6 +2,9 @@ import { FC_PagosItems, SVFE_FC_SEND } from "../types/svf_dte/fc.types";
 import { Customer, ICartProduct, ITransmitter } from "../types/svf_dte/global";
 import { generate_uuid } from "./plugins/uuid";
 import {
+  calc_exenta,
+  calc_gravada,
+  calc_no_suj,
   calcularDescuento,
   calDiscount,
   convertCurrencyFormat,
@@ -12,7 +15,11 @@ import {
   total_iva,
   total_without_discount,
 } from "./settings";
-import { generate_emisor, generate_receptor, make_cuerpo_documento_factura } from "./utils";
+import {
+  generate_emisor,
+  generate_receptor,
+  make_cuerpo_documento_factura,
+} from "./utils";
 
 /**
  * Generates a Factura Electronica Venta object based on the given transmitter
@@ -89,9 +96,9 @@ export const generate_factura = (
       ventaTercero: null,
       cuerpoDocumento: make_cuerpo_documento_factura(products),
       resumen: {
-        totalNoSuj: 0,
-        totalExenta: 0,
-        totalGravada: Number(total(products).toFixed(2)),
+        totalNoSuj: Number(calc_no_suj(products).toFixed(2)),
+        totalExenta: Number(calc_exenta(products).toFixed(2)),
+        totalGravada: Number(calc_gravada(products).toFixed(2)),
         subTotalVentas: Number(total(products).toFixed(2)),
         descuNoSuj: 0,
         descuExenta: 0,

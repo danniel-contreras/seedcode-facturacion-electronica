@@ -50,6 +50,10 @@ export {
   total,
   total_iva,
   total_without_discount,
+  calc_exenta,
+  calcularPrecioDeseado,
+  calc_gravada,
+  calc_no_suj,
 } from "./utils/settings";
 
 export {

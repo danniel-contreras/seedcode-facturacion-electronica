@@ -96,7 +96,7 @@ export function convertCurrencyFormat(input: string) {
  * @param {number} total - The total without iva
  * @returns {{iva: number, total_with_iva: number}} - An object with the iva amount and the total with iva
  */
-export const calc_iva = (total: number) => {
+export const calc_iva = (total: number): { iva: number; total_with_iva: number; } => {
   const iva = total * 0.13;
   const total_with_iva = total + iva;
   return {
@@ -114,7 +114,7 @@ export const calc_iva = (total: number) => {
 export function calcularDescuento(
   precioOriginal: number,
   precioDeseado: number
-) {
+): { montoDescuento: number; porcentajeDescuento: number; } {
   const montoDescuento = precioOriginal - precioDeseado;
   const porcentajeDescuento = (montoDescuento / precioOriginal) * 100;
   return { montoDescuento, porcentajeDescuento };
@@ -128,7 +128,7 @@ export function calcularDescuento(
 export function calcularPrecioDeseado(
   precioOriginal: number,
   porcentajeDescuento: number
-) {
+): { montoDescuento: number; precioDeseado: number; } {
   const montoDescuento = (porcentajeDescuento / 100) * precioOriginal;
   const precioDeseado = precioOriginal - montoDescuento;
   return { montoDescuento, precioDeseado };
@@ -147,7 +147,7 @@ export const generate_control = (
   codStable: string,
   codPVenta: string,
   nTicket: string
-) => {
+): string => {
   return `DTE-${tipo_sol}-${codStable + codPVenta}-${nTicket}`;
 };
 
@@ -205,7 +205,7 @@ export function getElSalvadorDateTime(): { fecEmi: string; horEmi: string } {
  * @param {number} quantity - The quantity of the item.
  * @returns {number} - The iva amount.
  */
-export const get_iva = (price: number, quantity: number) => {
+export const get_iva = (price: number, quantity: number): number => {
   const total = Number(price) * Number(quantity);
 
   const iva = total / 1.13;
@@ -218,7 +218,7 @@ export const get_iva = (price: number, quantity: number) => {
  * @param {string} texto - The string to add a dash to.
  * @returns {string} - The string with a dash added to the end, if it didn't already contain one.
  */
-export function agregarGuion(texto: string) {
+export function agregarGuion(texto: string): string {
   if (!texto.includes("-")) {
     return texto.slice(0, -1) + "-" + texto.slice(-1);
   }
@@ -230,7 +230,7 @@ export function agregarGuion(texto: string) {
  * @param {ICartProduct[]} productsCarts - The products in the cart.
  * @returns {number} - The total amount of the cart.
  */
-export const total = (productsCarts: ICartProduct[]) => {
+export const total = (productsCarts: ICartProduct[]): number => {
   const total = productsCarts
     .map((cp) => Number(cp.quantity) * Number(cp.price))
     .reduce((a, b) => a + b, 0);
@@ -243,7 +243,7 @@ export const total = (productsCarts: ICartProduct[]) => {
  * @param {ICartProduct[]} productsCarts - The products in the cart.
  * @returns {number} - The total amount of the cart without considering discounts.
  */
-export const total_without_discount = (productsCarts: ICartProduct[]) => {
+export const total_without_discount = (productsCarts: ICartProduct[]): number => {
   const total = productsCarts
     .map((prd) => {
       const price =
@@ -260,7 +260,7 @@ export const total_without_discount = (productsCarts: ICartProduct[]) => {
  * @param {ICartProduct[]} productsCarts - The products in the cart.
  * @returns {number} - The total discount of the cart.
  */
-export const calDiscount = (productsCarts: ICartProduct[]) => {
+export const calDiscount = (productsCarts: ICartProduct[]): number => {
   return productsCarts
     .map((prd) => Number(prd.monto_descuento * prd.quantity))
     .reduce((a, b) => a + b, 0);
@@ -271,7 +271,7 @@ export const calDiscount = (productsCarts: ICartProduct[]) => {
  * @param {ICartProduct[]} productsCarts - The products in the cart.
  * @returns {number} - The total iva amount of the cart.
  */
-export const total_iva = (productsCarts: ICartProduct[]) => {
+export const total_iva = (productsCarts: ICartProduct[]): number => {
   return productsCarts
     .map((cp) => {
       const total = Number(cp.price) * Number(cp.quantity);
@@ -280,5 +280,41 @@ export const total_iva = (productsCarts: ICartProduct[]) => {
 
       return total - iva;
     })
+    .reduce((a, b) => a + b, 0);
+};
+
+/**
+ * Calculates the total gravada amount of a cart.
+ * @param {ICartProduct[]} productsCarts - The products in the cart.
+ * @returns {number} - The total gravada amount of the cart.
+ */
+export const calc_gravada = (productsCarts: ICartProduct[]): number => {
+  return productsCarts
+    .map((total) => Number(total.total_gravada))
+    .reduce((a, b) => a + b, 0);
+};
+
+
+/**
+ * Calculates the total exenta amount of a cart.
+ * @param {ICartProduct[]} productsCarts - The products in the cart.
+ * @returns {number} - The total exenta amount of the cart.
+ */
+export const calc_exenta = (productsCarts: ICartProduct[]): number => {
+  return productsCarts
+    .map((total) => Number(total.total_exenta))
+    .reduce((a, b) => a + b, 0);
+};
+
+
+/**
+ * Calculates the total no sujeta amount of a cart.
+ * @param {ICartProduct[]} productsCarts - The products in the cart.
+ * @returns {number} - The total no sujeta amount of the cart.
+ */
+
+export const calc_no_suj = (productsCarts: ICartProduct[]): number => {
+  return productsCarts
+    .map((total) => Number(total.total_no_suj))
     .reduce((a, b) => a + b, 0);
 };
