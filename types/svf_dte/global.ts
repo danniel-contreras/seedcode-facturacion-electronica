@@ -30,11 +30,6 @@ export interface ITransmitter {
   descActividad: string;
   codActividad: string;
   nombreComercial: string;
-  tipoEstablecimiento: string;
-  codEstableMH: string;
-  codEstable: string;
-  codPuntoVentaMH: string;
-  codPuntoVenta: string;
   direccion: IAddress;
 }
 
@@ -58,12 +53,8 @@ export interface ICartProduct {
   prices: string[];
 }
 
-export interface CustomerDirection {
-  departamento: string;
-  nombreDepartamento: string;
-  municipio: string;
-  nombreMunicipio: string;
-  complemento: string;
+export interface ICartProductCCFE extends ICartProduct {
+  tributos: string[]
 }
 
 export interface Customer {
@@ -78,5 +69,5 @@ export interface Customer {
   telefono: string;
   correo: string;
   tipoContribuyente: string;
-  direccion: CustomerDirection;
+  direccion: IAddress;
 }

@@ -17,3 +17,29 @@ export {
   type FC_TributosItems,
   type FC_VentaTercerosItems,
 } from "./types/svf_dte/fc.types";
+
+export { generate_uuid } from "./utils/plugins/uuid";
+
+export {
+  calcularDescuento,
+  calDiscount,
+  convertCurrencyFormat,
+  formatearNumero,
+  generate_control,
+  getElSalvadorDateTime,
+  total,
+  total_iva,
+  total_without_discount,
+} from "./utils/settings";
+
+export {
+  generate_emisor,
+  generate_receptor,
+  make_cuerpo_documento_factura,
+} from "./utils/utils";
+
+export {
+  type Customer,
+  type ICartProduct,
+  type ITransmitter,
+} from "./types/svf_dte/global";
