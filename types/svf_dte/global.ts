@@ -46,7 +46,6 @@ export interface ICheckPayload {
   codigoGeneracion: string;
 }
 
-
 export interface IAddress {
   departamento: string;
   municipio: string;
@@ -75,7 +74,7 @@ export interface ICartProduct {
   priceB: string;
   priceC: string;
   tipoItem: string;
-  uniMedida:string;
+  uniMedida: string;
   productName: string;
   productCode: string;
   quantity: number;
@@ -87,10 +86,13 @@ export interface ICartProduct {
   monto_descuento: number;
   porcentaje_descuento: number;
   prices: string[];
+  total_exenta: number;
+  total_gravada: number;
+  total_no_suj: number;
 }
 
 export interface ICartProductCCFE extends ICartProduct {
-  tributos: string[]
+  tributos: string[];
 }
 
 export interface Customer {
@@ -107,7 +109,6 @@ export interface Customer {
   tipoContribuyente: string;
   direccion: IAddress;
 }
-
 
 export interface TipoTributo {
   codigo: string;

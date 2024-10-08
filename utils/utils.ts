@@ -1,5 +1,11 @@
 import { FC_CuerpoDocumentoItems } from "../types/svf_dte/fc.types";
-import { Customer, ICartProduct, ITransmitter } from "../types/svf_dte/global";
+import {
+  Customer,
+  ICartProduct,
+  ITransmitter,
+  ResponseMHSuccess,
+  SendMHFailed,
+} from "../types/svf_dte/global";
 import { agregarGuion, get_iva } from "./settings";
 
 /**
@@ -79,11 +85,11 @@ export const make_cuerpo_documento_factura = (
       codTributo: null,
       descripcion: cp.productName,
       precioUni: Number(price.toFixed(2)),
-      montoDescu: Number((cp.monto_descuento * cp.quantity).toFixed(2)),
-      ventaNoSuj: 0,
-      ventaExenta: 0,
-      ventaGravada: Number((cp.quantity * Number(cp.price)).toFixed(2)),
-      ivaItem: Number(get_iva(Number(cp.price), cp.quantity).toFixed(2)),
+      montoDescu: cp.monto_descuento,
+      ventaNoSuj: cp.total_no_suj,
+      ventaExenta: cp.total_exenta,
+      ventaGravada: cp.total_gravada,
+      ivaItem: Number(get_iva(Number(cp.total_gravada), 1).toFixed(2)),
       tributos: null,
       psv: 0,
       noGravado: 0,
@@ -183,3 +189,14 @@ export const generate_receptor = (value: Customer) => {
     correo: value!.correo,
   };
 };
+
+export function isResponseMHSuccess(
+  response: any
+): response is ResponseMHSuccess {
+  return response && response.success === true;
+}
+
+// Definir un type guard para verificar si es SendMHFailed
+export function isSendMHFailed(response: any): response is SendMHFailed {
+  return response && response.success === false;
+}

@@ -57,6 +57,8 @@ export {
   generate_receptor,
   make_cuerpo_documento_factura,
   make_cuerpo_documento_fiscal,
+  isResponseMHSuccess,
+  isSendMHFailed,
 } from "./utils/utils";
 
 export {
@@ -67,7 +69,7 @@ export {
   type TipoTributo,
   type PayloadMH,
   type ResponseMHSuccess,
-  type SendMHFailed
+  type SendMHFailed,
 } from "./types/svf_dte/global";
 
 export {
