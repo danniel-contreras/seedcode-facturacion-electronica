@@ -13,17 +13,12 @@ export interface ResponseMHSuccess {
 }
 
 export interface IAddress {
-  id: number;
   departamento: string;
-  nombreDepartamento: string;
   municipio: string;
-  nombreMunicipio: string;
   complemento: string;
-  active?: boolean;
 }
 
 export interface ITransmitter {
-  id: number;
   clavePrivada: string;
   clavePublica: string;
   claveApi: string;
@@ -41,8 +36,6 @@ export interface ITransmitter {
   codPuntoVentaMH: string;
   codPuntoVenta: string;
   direccion: IAddress;
-  direccionId: number;
-  active?: boolean;
 }
 
 export interface ICartProduct {
