@@ -72,7 +72,7 @@ export const make_cuerpo_documento_factura = (
     return {
       numItem: index + 1,
       tipoItem: Number(cp.tipoItem),
-      uniMedida: Number(26),
+      uniMedida: Number(cp.uniMedida),
       numeroDocumento: null,
       cantidad: cp.quantity,
       codigo: cp.productCode,
@@ -91,30 +91,95 @@ export const make_cuerpo_documento_factura = (
   });
 };
 
-export const generate_receptor = (value: Customer) => {
+/**
+ * Makes an array of FC_CuerpoDocumentoItems from an array of ICartProduct.
+ * The prices are selected based on the value of the "price" field of the product.
+ * If the price is one of the base prices, the price is selected.
+ * If not, the first non-zero price is selected.
+ * @param {ICartProduct[]} products_cart - The products in the cart.
+ * @returns {FC_CuerpoDocumentoItems[]} - An array of FC_CuerpoDocumentoItems.
+ */
+
+export const make_cuerpo_documento_fiscal = (products_cart: ICartProduct[]) => {
+  return products_cart.map((cp, index) => {
+    const prices = [
+      Number(cp.base_price),
+      Number(cp.priceA),
+      Number(cp.priceB),
+      Number(cp.priceC),
+    ];
+
+    const price = prices.includes(Number(cp.price))
+      ? Number(cp.price)
+      : Number(cp.price) === Number(prices[0])
+      ? Number(prices[1])
+      : Number(cp.price);
     return {
-      tipoDocumento:
-        Number(value!.nrc) !== 0 && value!.nrc
-          ? '36'
-          : value!.tipoDocumento === '0' || value.tipoDocumento === 'N/A'
-            ? null
-            : value!.tipoDocumento,
-      numDocumento:
-        Number(value!.nrc) !== 0 && value!.nrc
-          ? value!.nit
-          : value!.numDocumento === '0' || value.numDocumento === 'N/A'
-            ? null
-            : agregarGuion(value!.numDocumento),
-      nrc: Number(value!.nrc) === 0 ? null : value!.nrc,
-      nombre: value!.nombre,
-      codActividad: Number(value!.codActividad) === 0 ? null : value!.codActividad,
-      descActividad: Number(value!.descActividad) === 0 ? null : value!.descActividad,
-      direccion: {
-        departamento: value!.direccion?.departamento,
-        municipio: value!.direccion?.municipio,
-        complemento: value!.direccion?.complemento,
-      },
-      telefono: value!.telefono,
-      correo: value!.correo,
+      numItem: index + 1,
+      tipoItem: Number(cp.tipoItem),
+      uniMedida: Number(cp.uniMedida),
+      numeroDocumento: null,
+      cantidad: cp.quantity,
+      codigo:
+        cp.productCode !== "" &&
+        cp.productCode !== "N/A" &&
+        cp.productCode !== "0"
+          ? cp.productCode
+          : null,
+      codTributo: null,
+      descripcion: cp.productName,
+      precioUni: Number(price.toFixed(2)),
+      montoDescu: Number((cp.monto_descuento * cp.quantity).toFixed(2)),
+      ventaNoSuj: 0,
+      ventaExenta: 0,
+      ventaGravada: Number((Number(cp.price!) * cp.quantity).toFixed(2)),
+      tributos: ["20"],
+      psv: 0,
+      noGravado: 0,
     };
+  });
+};
+
+/**
+ * Generates the SVFE_FC_Receptor object from a Customer object.
+ * - If the Customer.nrc is not zero, sets the tipoDocumento to "36" and numDocumento to Customer.nit.
+ * - If the Customer.nrc is zero, sets the tipoDocumento to Customer.tipoDocumento and numDocumento to Customer.numDocumento after adding a dash.
+ * - Sets the nrc to Customer.nrc if it is not zero.
+ * - Sets the nombre to Customer.nombre.
+ * - Sets the codActividad to Customer.codActividad if it is not zero.
+ * - Sets the descActividad to Customer.descActividad if it is not zero.
+ * - Sets the direccion object with the departamento, municipio and complemento from the Customer.direccion object.
+ * - Sets the telefono to Customer.telefono.
+ * - Sets the correo to Customer.correo.
+ * @param {Customer} value - The Customer object to generate the SVFE_FC_Receptor from.
+ * @returns {SVFE_FC_Receptor} The generated SVFE_FC_Receptor object.
+ */
+export const generate_receptor = (value: Customer) => {
+  return {
+    tipoDocumento:
+      Number(value!.nrc) !== 0 && value!.nrc
+        ? "36"
+        : value!.tipoDocumento === "0" || value.tipoDocumento === "N/A"
+        ? null
+        : value!.tipoDocumento,
+    numDocumento:
+      Number(value!.nrc) !== 0 && value!.nrc
+        ? value!.nit
+        : value!.numDocumento === "0" || value.numDocumento === "N/A"
+        ? null
+        : agregarGuion(value!.numDocumento),
+    nrc: Number(value!.nrc) === 0 ? null : value!.nrc,
+    nombre: value!.nombre,
+    codActividad:
+      Number(value!.codActividad) === 0 ? null : value!.codActividad,
+    descActividad:
+      Number(value!.descActividad) === 0 ? null : value!.descActividad,
+    direccion: {
+      departamento: value!.direccion?.departamento,
+      municipio: value!.direccion?.municipio,
+      complemento: value!.direccion?.complemento,
+    },
+    telefono: value!.telefono,
+    correo: value!.correo,
   };
+};

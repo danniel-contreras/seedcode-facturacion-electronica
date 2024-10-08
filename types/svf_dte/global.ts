@@ -40,6 +40,7 @@ export interface ICartProduct {
   priceB: string;
   priceC: string;
   tipoItem: string;
+  uniMedida:string;
   productName: string;
   productCode: string;
   quantity: number;
@@ -70,4 +71,10 @@ export interface Customer {
   correo: string;
   tipoContribuyente: string;
   direccion: IAddress;
+}
+
+
+export interface TipoTributo {
+  codigo: string;
+  valores: string;
 }

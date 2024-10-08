@@ -132,6 +132,68 @@ Porcentaje de retención de IVA aplicado a la transacción, en caso de que apliq
 
 El ambiente en el que se emite la factura: puede ser de pruebas o producción, dependiendo del contexto de uso.
 
+## Crédito Fiscal
+
+La función `generate_credito_fiscal` se utiliza para generar un Crédito Fiscal Electrónico. A continuación se describen los parámetros requeridos y un ejemplo de cómo usar esta función.
+
+```typescript
+import { generate_credito_fiscal } from "seedcode-facturacion-electronica";
+
+const creditoFiscal = generate_credito_fiscal(
+  transmitter, // Datos del emisor de crédito fiscal
+  codEstable, // Código del establecimiento del emisor
+  codPuntoVenta, // Código del punto de venta del emisor
+  codEstableMH, // Código del establecimiento en el sistema MH
+  codPuntoVentaMH, // Código del punto de venta en el sistema MH
+  tipoEstablecimiento, // Tipo de establecimiento
+  nextCorrelative, // Número correlativo del crédito fiscal
+  receptor, // Datos del receptor (cliente)
+  products_carts, // Productos incluidos en el crédito fiscal
+  tipo_pago, // Tipos de pago
+  retencion, // Porcentaje de retención de IVA
+  condition, // Condición de la operación
+  ambiente, // Ambiente (producción o pruebas)
+  tributo // Tipo de tributo (por defecto, IVA)
+);
+```
+
+### Parámetros
+
+- **transmitter**: El objeto del emisor del crédito fiscal. Incluye los siguientes campos:
+  - clavePrivada: Clave privada del emisor.
+  - clavePublica: Clave pública del emisor.
+  - claveApi: Clave API del emisor.
+  - nit: NIT del emisor.
+  - nrc: NRC del emisor.
+  - nombre: Nombre del emisor.
+  - telefono: Teléfono del emisor.
+  - correo: Correo del emisor.
+  - descActividad: Descripción de la actividad del emisor.
+  - codActividad: Código de la actividad del emisor.
+  - nombreComercial: Nombre comercial del emisor.
+  - tipoEstablecimiento: Tipo de establecimiento.
+  - codEstableMH: Código del establecimiento en el sistema MH.
+  - codEstable: Código del establecimiento.
+  - codPuntoVentaMH: Código del punto de venta en el sistema MH.
+  - codPuntoVenta: Código del punto de venta.
+  - direccion: Dirección del emisor (ver más detalles en la sección **direccion**).
+- **codEstable**: Código del establecimiento del emisor.
+- **codPuntoVenta**: Código del punto de venta del emisor.
+- **codEstableMH**: Código del establecimiento en el sistema MH.
+- **codPuntoVentaMH**: Código del punto de venta en el sistema MH.
+- **tipoEstablecimiento**: Tipo de establecimiento del emisor.
+- **nextCorrelative**: El siguiente número correlativo para el crédito fiscal.
+- **receptor**: Datos del receptor (cliente). Incluye:
+  - nombre: Nombre del receptor.
+  - nit: NIT del receptor.
+  - direccion: Dirección del receptor.
+- **products_carts**: Arreglo de productos o servicios incluidos en el crédito fiscal.
+- **tipo_pago**: Métodos de pago utilizados en la operación.
+- **retencion**: Porcentaje de retención de IVA aplicado.
+- **condition**: Condición de la operación.
+- **ambiente**: El ambiente de emisión (por defecto "00").
+- **tributo**: Tipo de tributo aplicable (por defecto `IVA`).
+
 ## Licencia
 
 Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo LICENSE para más detalles.

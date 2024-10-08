@@ -1,4 +1,6 @@
 export { generate_factura } from "./utils/svfe_fe";
+export { generate_credito_fiscal } from "./utils/svfe_ccfe";
+
 export {
   type SVFE_FC,
   type SVFE_FC_SEND,
@@ -18,6 +20,24 @@ export {
   type FC_VentaTercerosItems,
 } from "./types/svf_dte/fc.types";
 
+export {
+    type SVFE_CF,
+    type SVFE_CF_Firmado,
+    type SVFE_CF_SEND,
+    type CF_ApendiceItems,
+    type CF_CuerpoDocumentoItems,
+    type CF_DocumentoRelacionadoItems,
+    type CF_Emisor,
+    type CF_Extension,
+    type CF_Identificacion,
+    type CF_OtrosDocumentosItems,
+    type CF_PagosItems,
+    type CF_Receptor,
+    type CF_Resumen,
+    type CF_TributosItems,
+    type CF_VentaTercerosItems,
+} from "./types/svf_dte/cf.types"
+
 export { generate_uuid } from "./utils/plugins/uuid";
 
 export {
@@ -36,10 +56,13 @@ export {
   generate_emisor,
   generate_receptor,
   make_cuerpo_documento_factura,
+  make_cuerpo_documento_fiscal,
 } from "./utils/utils";
 
 export {
   type Customer,
   type ICartProduct,
   type ITransmitter,
+  type ICartProductCCFE,
+  type TipoTributo 
 } from "./types/svf_dte/global";
