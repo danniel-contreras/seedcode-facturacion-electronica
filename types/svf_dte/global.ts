@@ -12,6 +12,41 @@ export interface ResponseMHSuccess {
   versionApp: number;
 }
 
+export interface SendMHFailed {
+  version: number;
+  ambiente: string;
+  versionApp: number;
+  estado: string;
+  codigoGeneracion: string;
+  selloRecibido: string | null;
+  fhProcesamiento: string;
+  clasificaMsg: string;
+  codigoMsg: string;
+  descripcionMsg: string;
+  observaciones: string[];
+}
+
+export interface ICheckResponse {
+  version: number;
+  ambiente: string;
+  versionApp: number;
+  estado?: string | null;
+  codigoGeneracion?: string | null;
+  selloRecibido?: null | string;
+  fhProcesamiento: string;
+  clasificaMsg?: any | null;
+  codigoMsg: string;
+  descripcionMsg: string;
+  observaciones: string[];
+}
+
+export interface ICheckPayload {
+  nitEmisor: string;
+  tdte: string;
+  codigoGeneracion: string;
+}
+
+
 export interface IAddress {
   departamento: string;
   municipio: string;
@@ -77,4 +112,11 @@ export interface Customer {
 export interface TipoTributo {
   codigo: string;
   valores: string;
+}
+export interface PayloadMH {
+  ambiente: string;
+  idEnvio: number;
+  version: number;
+  tipoDte: string;
+  documento: string;
 }

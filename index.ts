@@ -21,22 +21,22 @@ export {
 } from "./types/svf_dte/fc.types";
 
 export {
-    type SVFE_CF,
-    type SVFE_CF_Firmado,
-    type SVFE_CF_SEND,
-    type CF_ApendiceItems,
-    type CF_CuerpoDocumentoItems,
-    type CF_DocumentoRelacionadoItems,
-    type CF_Emisor,
-    type CF_Extension,
-    type CF_Identificacion,
-    type CF_OtrosDocumentosItems,
-    type CF_PagosItems,
-    type CF_Receptor,
-    type CF_Resumen,
-    type CF_TributosItems,
-    type CF_VentaTercerosItems,
-} from "./types/svf_dte/cf.types"
+  type SVFE_CF,
+  type SVFE_CF_Firmado,
+  type SVFE_CF_SEND,
+  type CF_ApendiceItems,
+  type CF_CuerpoDocumentoItems,
+  type CF_DocumentoRelacionadoItems,
+  type CF_Emisor,
+  type CF_Extension,
+  type CF_Identificacion,
+  type CF_OtrosDocumentosItems,
+  type CF_PagosItems,
+  type CF_Receptor,
+  type CF_Resumen,
+  type CF_TributosItems,
+  type CF_VentaTercerosItems,
+} from "./types/svf_dte/cf.types";
 
 export { generate_uuid } from "./utils/plugins/uuid";
 
@@ -64,5 +64,16 @@ export {
   type ICartProduct,
   type ITransmitter,
   type ICartProductCCFE,
-  type TipoTributo 
+  type TipoTributo,
+  type PayloadMH,
+  type ResponseMHSuccess,
+  type SendMHFailed
 } from "./types/svf_dte/global";
+
+export {
+  firmar_documento,
+  send_to_mh,
+  check_dte,
+} from "./utils/services/svfe_services";
+
+export { MH_DTE, MH_DTE_TEST, CHECK_URL } from "./utils/contants";
