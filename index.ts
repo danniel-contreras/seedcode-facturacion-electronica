@@ -63,6 +63,7 @@ export {
   make_cuerpo_documento_fiscal,
   isResponseMHSuccess,
   isSendMHFailed,
+  isResponseMH
 } from "./utils/utils";
 
 export {

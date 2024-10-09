@@ -200,3 +200,8 @@ export function isResponseMHSuccess(
 export function isSendMHFailed(response: any): response is SendMHFailed {
   return response && response.success === false;
 }
+
+// Verifica si la respuesta es un éxito
+export function isResponseMH(res: any): res is ResponseMHSuccess {
+  return res && res.success === true && 'estado' in res;
+}
