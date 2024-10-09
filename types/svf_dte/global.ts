@@ -89,6 +89,7 @@ export interface ICartProduct {
   total_exenta: number;
   total_gravada: number;
   total_no_suj: number;
+  no_gravado: number;
 }
 
 export interface ICartProductCCFE extends ICartProduct {

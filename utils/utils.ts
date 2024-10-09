@@ -92,7 +92,7 @@ export const make_cuerpo_documento_factura = (
       ivaItem: Number(get_iva(Number(cp.total_gravada), 1).toFixed(2)),
       tributos: null,
       psv: 0,
-      noGravado: 0,
+      noGravado: Number(cp.no_gravado),
     };
   });
 };

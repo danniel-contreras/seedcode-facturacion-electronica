@@ -4,6 +4,7 @@ import { generate_uuid } from "./plugins/uuid";
 import {
   calc_exenta,
   calc_gravada,
+  calc_no_grav,
   calc_no_suj,
   calcularDescuento,
   calDiscount,
@@ -99,7 +100,7 @@ export const generate_factura = (
         totalNoSuj: Number(calc_no_suj(products).toFixed(2)),
         totalExenta: Number(calc_exenta(products).toFixed(2)),
         totalGravada: Number(calc_gravada(products).toFixed(2)),
-        subTotalVentas: Number(total(products).toFixed(2)),
+        subTotalVentas: Number(calc_gravada(products).toFixed(2)),
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
@@ -111,15 +112,29 @@ export const generate_factura = (
         ),
         totalDescu: Number(calDiscount(products).toFixed(2)),
         tributos: null,
-        subTotal: Number(total(products).toFixed(2)),
+        subTotal: Number(calc_gravada(products).toFixed(2)),
         ivaRete1: Number(ivaRete1.toFixed(2)),
         reteRenta: 0,
         totalIva: Number(total_iva(products).toFixed(2)),
-        montoTotalOperacion: Number(total(products).toFixed(2)),
-        totalNoGravado: 0,
-        totalPagar: Number((total(products) - ivaRete1).toFixed(2)),
+        montoTotalOperacion: Number(calc_gravada(products).toFixed(2)),
+        totalNoGravado: Number(calc_no_grav(products).toFixed(2)),
+        totalPagar: Number(
+          (
+            calc_no_grav(products) +
+            calc_exenta(products) +
+            calc_no_suj(products) +
+            calc_gravada(products) -
+            ivaRete1
+          ).toFixed(2)
+        ),
         totalLetras: convertCurrencyFormat(
-          (total(products) - ivaRete1).toFixed(2)
+          (
+            calc_no_grav(products) +
+            calc_exenta(products) +
+            calc_no_suj(products) +
+            calc_gravada(products) -
+            ivaRete1
+          ).toFixed(2)
         ),
         saldoFavor: 0,
         condicionOperacion: condition,

@@ -318,3 +318,9 @@ export const calc_no_suj = (productsCarts: ICartProduct[]): number => {
     .map((total) => Number(total.total_no_suj))
     .reduce((a, b) => a + b, 0);
 };
+
+export const calc_no_grav = (productsCarts: ICartProduct[]): number => {
+  return productsCarts
+    .map((total) => Number(total.no_gravado))
+    .reduce((a, b) => a + b, 0);
+};
