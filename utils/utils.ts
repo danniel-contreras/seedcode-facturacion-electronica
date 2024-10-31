@@ -44,9 +44,9 @@ export const generate_emisor = (
     telefono: transmitter.telefono,
     correo: transmitter.correo,
     codEstable: codEstable,
-    codEstableMH: codEstableMH === "0" ? null : codEstableMH,
+    codEstableMH: convertToNull(codEstableMH),
     codPuntoVenta: codPuntoVenta,
-    codPuntoVentaMH: codPuntoVentaMH === "0" ? null : codPuntoVentaMH,
+    codPuntoVentaMH: convertToNull(codPuntoVentaMH),
   };
 };
 
@@ -134,12 +134,7 @@ export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart:
       uniMedida: Number(cp.uniMedida),
       numeroDocumento: null,
       cantidad: cp.quantity,
-      codigo:
-        cp.productCode !== "" &&
-          cp.productCode !== "N/A" &&
-          cp.productCode !== "0"
-          ? cp.productCode
-          : null,
+      codigo: convertToNull(cp.productCode),
       codTributo: null,
       descripcion: cp.productName,
       precioUni: Number(price.toFixed(2)),
@@ -184,7 +179,7 @@ export const generate_receptor = (value: Customer) => {
         : value!.numDocumento === "0" || value.numDocumento === "N/A"
           ? null
           : agregarGuion(value!.numDocumento),
-    nrc: Number(value!.nrc) === 0 ? null : value!.nrc,
+    nrc: convertToNull(value!.nrc),
     nombre: value!.nombre,
     codActividad: convertToNull(value!.codActividad),
     descActividad: convertToNull(value!.descActividad),
@@ -198,13 +193,19 @@ export const generate_receptor = (value: Customer) => {
   };
 };
 
+/**
+ * Returns the value if it is not empty, zero or "N/A", otherwise returns null.
+ * @param {string | null} value - The value to check.
+ * @returns {string | null} The value if it is not empty, zero or "N/A", otherwise null.
+ */
 export const convertToNull = (value: string | null) => {
   if (value) {
-    if (value !== "0" && value !== "N/A") return value
+    if (value !== "" && value !== "0" && value !== "N/A") return value
     else return null
   }
   return null
 }
+
 
 export function isResponseMHSuccess(
   response: any
