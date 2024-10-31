@@ -6,6 +6,7 @@ import {
 } from "../types/svf_dte/global";
 import { generate_uuid } from "./plugins/uuid";
 import {
+  add_iva,
   calcularDescuento,
   calDiscount,
   convertCurrencyFormat,
@@ -38,6 +39,8 @@ import { generate_emisor, make_cuerpo_documento_fiscal } from "./utils";
  * @param {number} condition - The condition.
  * @param {string} [ambiente="00"] - The environment.
  * @param {TipoTributo} [tributo=TipoTributo.IVA] - The type of tax.
+ * @param {number} [rete=0] - The first tax.
+ * @param {boolean} [includeIva=false] - Whether to include IVA in the total.
  * @returns {SVFE_CF_SEND} - The Crédito Fiscal Electrónico object.
  */
 export const generate_credito_fiscal = (
@@ -58,8 +61,8 @@ export const generate_credito_fiscal = (
   rete: number = 0,
   includeIva: boolean = false
 ): SVFE_CF_SEND => {
-  const subTotal = total(products_carts);
-  const iva = total_iva(products_carts);
+  const subTotal = includeIva ? Number(total(products_carts) / 1.13) : total(products_carts);
+  const iva = includeIva ? total_iva(products_carts) : add_iva(products_carts);
   const MontoTotal = subTotal + iva;
   const retentionR = reteRenta(rete, MontoTotal);
 
@@ -104,15 +107,15 @@ export const generate_credito_fiscal = (
       resumen: {
         totalNoSuj: 0,
         totalExenta: 0,
-        totalGravada: Number(total(products_carts).toFixed(2)),
-        subTotalVentas: Number(total(products_carts).toFixed(2)),
+        totalGravada: Number(subTotal.toFixed(2)),
+        subTotalVentas: Number(subTotal.toFixed(2)),
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
         porcentajeDescuento: Number(
           calcularDescuento(
             total_without_discount(products_carts),
-            total(products_carts)
+            subTotal
           ).porcentajeDescuento.toFixed(2)
         ),
         totalDescu: Number(calDiscount(products_carts).toFixed(2)),
@@ -120,10 +123,10 @@ export const generate_credito_fiscal = (
           {
             codigo: tributo!.codigo,
             descripcion: tributo!.valores,
-            valor: Number(total_iva(products_carts).toFixed(2)),
+            valor: Number(iva.toFixed(2)),
           },
         ],
-        subTotal: Number(total(products_carts).toFixed(2)),
+        subTotal: Number(subTotal.toFixed(2)),
         ivaRete1: Number(retencion.toFixed(2)),
         reteRenta: retentionR,
         ivaPerci1: 0,

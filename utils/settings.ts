@@ -284,6 +284,23 @@ export const total_iva = (productsCarts: ICartProduct[]): number => {
 };
 
 /**
+ * Calculates the total iva amount of a cart.
+ * @param {ICartProduct[]} productsCarts - The products in the cart.
+ * @returns {number} - The total iva amount of the cart.
+ */
+export const add_iva = (productsCarts: ICartProduct[]): number => {
+  return productsCarts
+    .map((cp) => {
+      const total = Number(cp.price) * Number(cp.quantity);
+
+      const iva = total * 0.13;
+
+      return iva;
+    })
+    .reduce((a, b) => a + b, 0);
+};
+
+/**
  * Calculates the total gravada amount of a cart.
  * @param {ICartProduct[]} productsCarts - The products in the cart.
  * @returns {number} - The total gravada amount of the cart.

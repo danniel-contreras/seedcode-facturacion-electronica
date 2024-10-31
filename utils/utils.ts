@@ -102,10 +102,16 @@ export const make_cuerpo_documento_factura = (
  * The prices are selected based on the value of the "price" field of the product.
  * If the price is one of the base prices, the price is selected.
  * If not, the first non-zero price is selected.
+ * @param {boolean} includeIva - Whether to include IVA in the total.
  * @param {ICartProduct[]} products_cart - The products in the cart.
  * @returns {FC_CuerpoDocumentoItems[]} - An array of FC_CuerpoDocumentoItems.
  */
-
+/**
+ * Makes an array of FC_CuerpoDocumentoItems from an array of ICartProduct.
+ * The prices are selected based on the value of the "price" field of the product.
+ * If the price is one of the base prices, the price is selected.
+ * If not, the first non-zero price is selected.
+ */
 export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart: ICartProduct[]) => {
   return products_cart.map((cp, index) => {
     const prices = [
@@ -115,11 +121,13 @@ export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart:
       Number(cp.priceC),
     ];
 
-    const price = prices.includes(Number(cp.price))
+    let price = prices.includes(Number(cp.price))
       ? Number(cp.price)
       : Number(cp.price) === Number(prices[0])
         ? Number(prices[1])
         : Number(cp.price);
+
+    includeIva ? price = Number(quitIva(price)) : price = price;
     return {
       numItem: index + 1,
       tipoItem: Number(cp.tipoItem),
@@ -134,14 +142,14 @@ export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart:
           : null,
       codTributo: null,
       descripcion: cp.productName,
-      precioUni: includeIva ? Number(quitIva(price)) : Number(price.toFixed(2)),
+      precioUni: Number(price.toFixed(2)),
       montoDescu: Number((cp.monto_descuento * cp.quantity).toFixed(2)),
       ventaNoSuj: 0,
       ventaExenta: 0,
-      ventaGravada: includeIva ? Number((Number(quitIva(cp.price)!) * cp.quantity).toFixed(2)) : Number((Number(cp.price!) * cp.quantity).toFixed(2)),
+      ventaGravada: Number((price! * cp.quantity).toFixed(2)),
       tributos: ["20"],
       psv: 0,
-      noGravado: 0,
+      noGravado: cp.no_gravado,
     };
   });
 };
@@ -191,8 +199,8 @@ export const generate_receptor = (value: Customer) => {
 };
 
 export const convertToNull = (value: string | null) => {
-  if(value){
-    if(value !== "0" && value !== "N/A") return value
+  if (value) {
+    if (value !== "0" && value !== "N/A") return value
     else return null
   }
   return null
