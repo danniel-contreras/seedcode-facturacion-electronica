@@ -1,4 +1,4 @@
-export { generate_factura } from "./utils/svfe_fe";
+export { generate_factura, process_svfe } from "./utils/svfe_fe";
 export { generate_credito_fiscal } from "./utils/svfe_ccfe";
 
 export {
