@@ -1,5 +1,9 @@
 import { AxiosError, CancelTokenSource } from "axios";
-import { FC_PagosItems, SVFE_FC_SEND } from "../types/svf_dte/fc.types";
+import {
+  FC_PagosItems,
+  SVFE_FC_Firmado,
+  SVFE_FC_SEND,
+} from "../types/svf_dte/fc.types";
 import {
   Customer,
   ICartProduct,
@@ -155,27 +159,32 @@ export const generate_factura = (
   };
 };
 
+
 /**
- * Description placeholder
+ * Generates a Factura Electrónica object, signs it, and sends it to the MH
+ * server. The function returns an object with two properties: `mh`, which
+ * contains the response from the MH server, and `firmado`, which contains the
+ * signed document.
  *
- * @async
- * @param {ITransmitter} transmitter
- * @param {string} codEstable
- * @param {string} codPuntoVenta
- * @param {string} codEstableMH
- * @param {string} codPuntoVentaMH
- * @param {string} tipoEstablecimiento
- * @param {number} nextCorrelative
- * @param {ICartProduct[]} products
- * @param {Customer} customer
- * @param {number} condition
- * @param {FC_PagosItems[]} tipo_pago
- * @param {number} [ivaRete1=0]
- * @param {string} [ambiente="00"]
- * @param {CancelTokenSource} cancelToken
- * @param {string} firmador_url
- * @param {string} token
- * @returns {ResponseMHSuccess} -Response of MH success or failed
+ * @param {ITransmitter} transmitter - The transmitter object.
+ * @param {string} codEstable - The code of the establishment.
+ * @param {string} codPuntoVenta - The code of the point of sale.
+ * @param {string} codEstableMH - The code of the establishment in the MH system.
+ * @param {string} codPuntoVentaMH - The code of the point of sale in the MH system.
+ * @param {string} tipoEstablecimiento - The type of establishment.
+ * @param {number} nextCorrelative - The next correlative.
+ * @param {ICartProduct[]} products - The products.
+ * @param {Customer} customer - The customer.
+ * @param {number} condition - The condition.
+ * @param {FC_PagosItems[]} tipo_pago - The type of payment.
+ * @param {number} ivaRete1 - The first IVA retention.
+ * @param {string} ambiente - The environment.
+ * @param {CancelTokenSource} cancelToken - The cancel token.
+ * @param {string} firmador_url - The URL of the firmador service.
+ * @param {string} token - The token to use for the MH server.
+ * @returns {Promise<{mh: ResponseMHSuccess; firmado: SVFE_FC_Firmado}>} - A
+ *  promise that resolves with an object containing the response from the MH
+ *  server and the signed document.
  */
 export const process_svfe = async (
   transmitter: ITransmitter,
@@ -194,7 +203,10 @@ export const process_svfe = async (
   cancelToken: CancelTokenSource,
   firmador_url: string,
   token: string
-): Promise<ResponseMHSuccess> => {
+): Promise<{
+  mh: ResponseMHSuccess;
+  firmado: SVFE_FC_Firmado;
+}> => {
   const data = generate_factura(
     transmitter,
     codEstable,
@@ -222,20 +234,79 @@ export const process_svfe = async (
       documento: firma.data.body,
     };
 
-    return send_to_mh(payload, ambiente as "00" | "01", token, cancelToken).then()
-  }
+    try {
+      const response = await send_to_mh(
+        payload,
+        ambiente as "00" | "01",
+        token,
+        cancelToken
+      );
 
+      if (response.estado === "RECHAZADO") {
+        return {
+          mh: response,
+          firmado: {} as SVFE_FC_Firmado,
+        };
+      } else if (response.estado === "PROCESADO") {
+        return {
+          mh: response,
+          firmado: {
+            ...data.dteJson,
+            respuestaMH: response,
+            firma: firma.data.body,
+          },
+        };
+      } else {
+        return {
+          mh: {
+            version: 0,
+            ambiente,
+            versionApp: 1,
+            estado: "RECHAZADO",
+            codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+            selloRecibido: null,
+            fhProcesamiento: new Date().toLocaleDateString(),
+            clasificaMsg: "0",
+            codigoMsg: "0",
+            descripcionMsg: "ERROR EN ENVIÓ AL SERVIDOR",
+            observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
+          },
+          firmado: {} as SVFE_FC_Firmado,
+        };
+      }
+    } catch {
+      return {
+        mh: {
+          version: 0,
+          ambiente,
+          versionApp: 1,
+          estado: "RECHAZADO",
+          codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+          selloRecibido: null,
+          fhProcesamiento: new Date().toLocaleDateString(),
+          clasificaMsg: "0",
+          codigoMsg: "0",
+          descripcionMsg: "ERROR EN ENVIÓ AL SERVIDOR",
+          observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
+        },
+        firmado: {} as SVFE_FC_Firmado,
+      };
+    }
+  }
   return {
-    version: 0,
-    ambiente,
-    versionApp: 1,
-    estado: "RECHAZADO",
-    codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
-    selloRecibido: null,
-    fhProcesamiento: new Date().toLocaleDateString(),
-    clasificaMsg: "0",
-    codigoMsg: "0",
-    descripcionMsg: "FIRMA NO ENCONTRADA",
-    observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
+    mh: {
+      version: 0,
+      ambiente,
+      versionApp: 1,
+      estado: "RECHAZADO",
+      codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+      selloRecibido: null,
+      fhProcesamiento: new Date().toLocaleDateString(),
+      clasificaMsg: "0",
+      codigoMsg: "0",
+      descripcionMsg: "FIRMA NO ENCONTRADA",
+      observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
+    },
+    firmado: {} as SVFE_FC_Firmado,
   };
 };

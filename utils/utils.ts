@@ -176,19 +176,25 @@ export const generate_receptor = (value: Customer) => {
         : agregarGuion(value!.numDocumento),
     nrc: Number(value!.nrc) === 0 ? null : value!.nrc,
     nombre: value!.nombre,
-    codActividad:
-      Number(value!.codActividad) === 0 ? null : value!.codActividad,
-    descActividad:
-      Number(value!.descActividad) === 0 ? null : value!.descActividad,
+    codActividad: convertToNull(value!.codActividad),
+    descActividad: convertToNull(value!.descActividad),
     direccion: {
       departamento: value!.direccion?.departamento,
       municipio: value!.direccion?.municipio,
       complemento: value!.direccion?.complemento,
     },
-    telefono: value!.telefono,
+    telefono: convertToNull(value!.telefono),
     correo: value!.correo,
   };
 };
+
+export const convertToNull = (value: string | null) => {
+  if(value){
+    if(value !== "0" && value !== "N/A") return value
+    else return null
+  }
+  return null
+}
 
 export function isResponseMHSuccess(
   response: any
@@ -203,5 +209,5 @@ export function isSendMHFailed(response: any): response is SendMHFailed {
 
 // Verifica si la respuesta es un éxito
 export function isResponseMH(res: any): res is ResponseMHSuccess {
-  return res && res.success === true && 'estado' in res;
+  return res && res.success === true && "estado" in res;
 }
