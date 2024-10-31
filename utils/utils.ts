@@ -72,8 +72,8 @@ export const make_cuerpo_documento_factura = (
     const price = prices.includes(Number(cp.price))
       ? Number(cp.price)
       : Number(cp.price) === Number(prices[0])
-      ? Number(prices[1])
-      : Number(cp.price);
+        ? Number(prices[1])
+        : Number(cp.price);
 
     return {
       numItem: index + 1,
@@ -106,7 +106,7 @@ export const make_cuerpo_documento_factura = (
  * @returns {FC_CuerpoDocumentoItems[]} - An array of FC_CuerpoDocumentoItems.
  */
 
-export const make_cuerpo_documento_fiscal = (products_cart: ICartProduct[]) => {
+export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart: ICartProduct[]) => {
   return products_cart.map((cp, index) => {
     const prices = [
       Number(cp.base_price),
@@ -118,8 +118,8 @@ export const make_cuerpo_documento_fiscal = (products_cart: ICartProduct[]) => {
     const price = prices.includes(Number(cp.price))
       ? Number(cp.price)
       : Number(cp.price) === Number(prices[0])
-      ? Number(prices[1])
-      : Number(cp.price);
+        ? Number(prices[1])
+        : Number(cp.price);
     return {
       numItem: index + 1,
       tipoItem: Number(cp.tipoItem),
@@ -128,23 +128,25 @@ export const make_cuerpo_documento_fiscal = (products_cart: ICartProduct[]) => {
       cantidad: cp.quantity,
       codigo:
         cp.productCode !== "" &&
-        cp.productCode !== "N/A" &&
-        cp.productCode !== "0"
+          cp.productCode !== "N/A" &&
+          cp.productCode !== "0"
           ? cp.productCode
           : null,
       codTributo: null,
       descripcion: cp.productName,
-      precioUni: Number(price.toFixed(2)),
+      precioUni: includeIva ? Number(quitIva(price)) : Number(price.toFixed(2)),
       montoDescu: Number((cp.monto_descuento * cp.quantity).toFixed(2)),
       ventaNoSuj: 0,
       ventaExenta: 0,
-      ventaGravada: Number((Number(cp.price!) * cp.quantity).toFixed(2)),
+      ventaGravada: includeIva ? Number((Number(quitIva(cp.price)!) * cp.quantity).toFixed(2)) : Number((Number(cp.price!) * cp.quantity).toFixed(2)),
       tributos: ["20"],
       psv: 0,
       noGravado: 0,
     };
   });
 };
+
+const quitIva = (price: number | string) => (Number(price) / 1.13).toFixed(2);
 
 /**
  * Generates the SVFE_FC_Receptor object from a Customer object.
@@ -166,14 +168,14 @@ export const generate_receptor = (value: Customer) => {
       Number(value!.nrc) !== 0 && value!.nrc
         ? "36"
         : value!.tipoDocumento === "0" || value.tipoDocumento === "N/A"
-        ? null
-        : value!.tipoDocumento,
+          ? null
+          : value!.tipoDocumento,
     numDocumento:
       Number(value!.nrc) !== 0 && value!.nrc
         ? value!.nit
         : value!.numDocumento === "0" || value.numDocumento === "N/A"
-        ? null
-        : agregarGuion(value!.numDocumento),
+          ? null
+          : agregarGuion(value!.numDocumento),
     nrc: Number(value!.nrc) === 0 ? null : value!.nrc,
     nombre: value!.nombre,
     codActividad:

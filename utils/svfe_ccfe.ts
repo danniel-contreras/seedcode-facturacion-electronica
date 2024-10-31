@@ -54,11 +54,14 @@ export const generate_credito_fiscal = (
   retencion: number,
   condition: number,
   ambiente: string = "00",
-  tributo: TipoTributo
+  tributo: TipoTributo,
+  rete: number = 0,
+  includeIva: boolean = false
 ): SVFE_CF_SEND => {
   const subTotal = total(products_carts);
   const iva = total_iva(products_carts);
   const MontoTotal = subTotal + iva;
+  const retentionR = reteRenta(rete, MontoTotal);
 
   return {
     nit: transmitter.nit,
@@ -97,7 +100,7 @@ export const generate_credito_fiscal = (
       receptor,
       otrosDocumentos: null,
       ventaTercero: null,
-      cuerpoDocumento: make_cuerpo_documento_fiscal(products_carts),
+      cuerpoDocumento: make_cuerpo_documento_fiscal(includeIva, products_carts),
       resumen: {
         totalNoSuj: 0,
         totalExenta: 0,
@@ -122,12 +125,12 @@ export const generate_credito_fiscal = (
         ],
         subTotal: Number(total(products_carts).toFixed(2)),
         ivaRete1: Number(retencion.toFixed(2)),
-        reteRenta: 0,
+        reteRenta: retentionR,
         ivaPerci1: 0,
         montoTotalOperacion: Number(MontoTotal.toFixed(2)),
         totalNoGravado: 0,
-        totalPagar: Number((MontoTotal - retencion).toFixed(2)),
-        totalLetras: convertCurrencyFormat((MontoTotal - retencion).toFixed(2)),
+        totalPagar: Number(((MontoTotal - retencion) - retentionR).toFixed(2)),
+        totalLetras: convertCurrencyFormat(((MontoTotal - retencion) - retentionR).toFixed(2)),
         saldoFavor: 0,
         condicionOperacion: condition,
         pagos: tipo_pago.map((tp) => {
@@ -145,4 +148,9 @@ export const generate_credito_fiscal = (
       apendice: null,
     },
   };
+};
+
+const reteRenta = (rete: number, total: number) => {
+  const renta = (Number(total) * Number(rete)) / 100;
+  return renta > 0 ? renta : 0;
 };
