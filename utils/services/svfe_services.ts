@@ -36,29 +36,21 @@ export const firmar_documento = (
 };
 
 /**
- * Enviar un documento electrónico a la autoridad certificadora del
- * Ministerio de Hacienda.
+ * Description placeholder
  *
- * @param {PayloadMH} payload - El objeto a ser enviado.
- * @param {string} ambiente - El ambiente en el que se envía el documento.
- *   Puede ser "01" para producción o "00" para pruebas.
- * @param {string} token - El token de autenticación del usuario.
- * @param {CancelToken} cancelToken - Un token para cancelar la solicitud.
- * @returns {Promise<{ error: boolean; message: string; code: number } |
- *   ResponseMHSuccess | SendMHFailed>} - La respuesta de la solicitud, que
- *   puede ser un objeto de error, un objeto de respuesta exitosa o un objeto
- *   de respuesta de error.
+ * @async
+ * @param {PayloadMH} payload
+ * @param {("01" | "00")} ambiente
+ * @param {string} token
+ * @param {CancelTokenSource} cancelToken
+ * @returns {Promise<ResponseMHSuccess>}
  */
 export const send_to_mh = async (
   payload: PayloadMH,
   ambiente: "01" | "00",
   token: string,
   cancelToken: CancelTokenSource
-): Promise<
-  | ResponseMHSuccess
-  | SendMHFailed
-  | { error: boolean; message: string; code: number }
-> => {
+): Promise<ResponseMHSuccess> => {
   try {
     const response = await axios.post<ResponseMHSuccess>(
       ambiente === "00" ? MH_DTE_TEST : MH_DTE,
@@ -72,7 +64,7 @@ export const send_to_mh = async (
     );
     return response.data;
   } catch (error) {
-    const axiosError = error as AxiosError<SendMHFailed>;
+    const axiosError = error as AxiosError<ResponseMHSuccess>;
 
     if (axiosError.response) {
       return axiosError.response.data; // Devolver la estructura del error
@@ -80,9 +72,17 @@ export const send_to_mh = async (
 
     // Manejar otros tipos de errores, si los hay (errores de red, tiempo de espera, etc.)
     return {
-      error: true,
-      message: axiosError.message,
-      code: axiosError.code ? parseInt(axiosError.code) : 500,
+      version: 0,
+      ambiente,
+      versionApp: 1,
+      estado: "RECHAZADO",
+      codigoGeneracion: "N/A",
+      selloRecibido: null,
+      fhProcesamiento: new Date().toLocaleDateString(),
+      clasificaMsg: "0",
+      codigoMsg: "0",
+      descripcionMsg: "EL SISTEMA DE TRANSMISIÓN DE DTE NO RESPONDIÓ",
+      observaciones: ["NO SE OBTUVO RESPUESTA DEL EL MINISTERIO DE HACIENDA"],
     };
   }
 };

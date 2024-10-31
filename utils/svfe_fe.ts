@@ -1,6 +1,14 @@
+import { AxiosError, CancelTokenSource } from "axios";
 import { FC_PagosItems, SVFE_FC_SEND } from "../types/svf_dte/fc.types";
-import { Customer, ICartProduct, ITransmitter } from "../types/svf_dte/global";
+import {
+  Customer,
+  ICartProduct,
+  ITransmitter,
+  PayloadMH,
+  ResponseMHSuccess,
+} from "../types/svf_dte/global";
 import { generate_uuid } from "./plugins/uuid";
+import { firmar_documento, send_to_mh } from "./services/svfe_services";
 import {
   calc_exenta,
   calc_gravada,
@@ -144,5 +152,90 @@ export const generate_factura = (
       extension: null,
       apendice: null,
     },
+  };
+};
+
+/**
+ * Description placeholder
+ *
+ * @async
+ * @param {ITransmitter} transmitter
+ * @param {string} codEstable
+ * @param {string} codPuntoVenta
+ * @param {string} codEstableMH
+ * @param {string} codPuntoVentaMH
+ * @param {string} tipoEstablecimiento
+ * @param {number} nextCorrelative
+ * @param {ICartProduct[]} products
+ * @param {Customer} customer
+ * @param {number} condition
+ * @param {FC_PagosItems[]} tipo_pago
+ * @param {number} [ivaRete1=0]
+ * @param {string} [ambiente="00"]
+ * @param {CancelTokenSource} cancelToken
+ * @param {string} firmador_url
+ * @param {string} token
+ * @returns {ResponseMHSuccess} -Response of MH success or failed
+ */
+export const process_svfe = async (
+  transmitter: ITransmitter,
+  codEstable: string,
+  codPuntoVenta: string,
+  codEstableMH: string,
+  codPuntoVentaMH: string,
+  tipoEstablecimiento: string,
+  nextCorrelative: number,
+  products: ICartProduct[],
+  customer: Customer,
+  condition: number,
+  tipo_pago: FC_PagosItems[],
+  ivaRete1 = 0,
+  ambiente = "00",
+  cancelToken: CancelTokenSource,
+  firmador_url: string,
+  token: string
+): Promise<ResponseMHSuccess> => {
+  const data = generate_factura(
+    transmitter,
+    codEstable,
+    codPuntoVenta,
+    codEstableMH,
+    codPuntoVentaMH,
+    tipoEstablecimiento,
+    nextCorrelative,
+    products,
+    customer,
+    condition,
+    tipo_pago,
+    ivaRete1,
+    ambiente
+  );
+
+  const firma = await firmar_documento(data, firmador_url, cancelToken);
+
+  if (firma.data.body) {
+    const payload = {
+      ambiente: ambiente,
+      idEnvio: 1,
+      version: 1,
+      tipoDte: "01",
+      documento: firma.data.body,
+    };
+
+    return send_to_mh(payload, ambiente as "00" | "01", token, cancelToken).then()
+  }
+
+  return {
+    version: 0,
+    ambiente,
+    versionApp: 1,
+    estado: "RECHAZADO",
+    codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+    selloRecibido: null,
+    fhProcesamiento: new Date().toLocaleDateString(),
+    clasificaMsg: "0",
+    codigoMsg: "0",
+    descripcionMsg: "FIRMA NO ENCONTRADA",
+    observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
   };
 };
