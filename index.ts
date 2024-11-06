@@ -38,6 +38,17 @@ export {
   type CF_VentaTercerosItems,
 } from "./types/svf_dte/cf.types";
 
+export {
+  type IInvalidationToMH,
+  type IResponseInvalidationMH,
+  SVFE_Invalidacion,
+  type Invalidacion_Identificacion,
+  type Invalidacion_Documento,
+  type Invalidacion_Emisor,
+  type Invalidacion_Motivo,
+  InvalidationPayload,
+} from "./types/svf_dte/invalidation.types";
+
 export { generate_uuid } from "./utils/plugins/uuid";
 
 export {
@@ -63,7 +74,8 @@ export {
   make_cuerpo_documento_fiscal,
   isResponseMHSuccess,
   isSendMHFailed,
-  isResponseMH
+  isResponseMH,
+  verifyApplyAnulation,
 } from "./utils/utils";
 
 export {
@@ -81,6 +93,13 @@ export {
   firmar_documento,
   send_to_mh,
   check_dte,
-} from "./utils/services/svfe_services";
+} from "./utils/services/svfe.service";
 
-export { MH_DTE, MH_DTE_TEST, CHECK_URL } from "./utils/contants";
+export { MH_DTE, MH_DTE_TEST, CHECK_URL } from "./utils/constants";
+
+export {
+  generate_invalidation,
+  process_invalidation,
+} from "./utils/invalidation";
+
+export { send_invalidation_to_mh } from "./utils/services/invalidation.service";

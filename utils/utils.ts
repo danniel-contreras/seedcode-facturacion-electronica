@@ -7,6 +7,7 @@ import {
   SendMHFailed,
 } from "../types/svf_dte/global";
 import { agregarGuion, get_iva } from "./settings";
+import * as moment from "moment-timezone";
 
 /**
  * Generates an Emisor object based on the given transmitter and establishment
@@ -72,8 +73,8 @@ export const make_cuerpo_documento_factura = (
     const price = prices.includes(Number(cp.price))
       ? Number(cp.price)
       : Number(cp.price) === Number(prices[0])
-        ? Number(prices[1])
-        : Number(cp.price);
+      ? Number(prices[1])
+      : Number(cp.price);
 
     return {
       numItem: index + 1,
@@ -112,7 +113,10 @@ export const make_cuerpo_documento_factura = (
  * If the price is one of the base prices, the price is selected.
  * If not, the first non-zero price is selected.
  */
-export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart: ICartProduct[]) => {
+export const make_cuerpo_documento_fiscal = (
+  includeIva: boolean,
+  products_cart: ICartProduct[]
+) => {
   return products_cart.map((cp, index) => {
     const prices = [
       Number(cp.base_price),
@@ -124,10 +128,10 @@ export const make_cuerpo_documento_fiscal = (includeIva: boolean, products_cart:
     let price = prices.includes(Number(cp.price))
       ? Number(cp.price)
       : Number(cp.price) === Number(prices[0])
-        ? Number(prices[1])
-        : Number(cp.price);
+      ? Number(prices[1])
+      : Number(cp.price);
 
-    includeIva ? price = Number(quitIva(price)) : price = price;
+    includeIva ? (price = Number(quitIva(price))) : (price = price);
     return {
       numItem: index + 1,
       tipoItem: Number(cp.tipoItem),
@@ -171,14 +175,14 @@ export const generate_receptor = (value: Customer) => {
       Number(value!.nrc) !== 0 && value!.nrc
         ? "36"
         : value!.tipoDocumento === "0" || value.tipoDocumento === "N/A"
-          ? null
-          : value!.tipoDocumento,
+        ? null
+        : value!.tipoDocumento,
     numDocumento:
       Number(value!.nrc) !== 0 && value!.nrc
         ? value!.nit
         : value!.numDocumento === "0" || value.numDocumento === "N/A"
-          ? null
-          : agregarGuion(value!.numDocumento),
+        ? null
+        : agregarGuion(value!.numDocumento),
     nrc: convertToNull(value!.nrc),
     nombre: value!.nombre,
     codActividad: convertToNull(value!.codActividad),
@@ -200,12 +204,11 @@ export const generate_receptor = (value: Customer) => {
  */
 export const convertToNull = (value: string | null) => {
   if (value) {
-    if (value !== "" && value !== "0" && value !== "N/A") return value
-    else return null
+    if (value !== "" && value !== "0" && value !== "N/A") return value;
+    else return null;
   }
-  return null
-}
-
+  return null;
+};
 
 export function isResponseMHSuccess(
   response: any
@@ -221,4 +224,29 @@ export function isSendMHFailed(response: any): response is SendMHFailed {
 // Verifica si la respuesta es un éxito
 export function isResponseMH(res: any): res is ResponseMHSuccess {
   return res && res.success === true && "estado" in res;
+}
+/**
+ * Verifica si se puede aplicar una anulación a un DTE emitido en una fecha
+ * dada, dependiendo del tipo de DTE y la fecha actual.
+ *
+ * @param {string} tipoDte - Tipo de DTE.
+ * @param {string} date - Fecha del DTE en formato "YYYY-MM-DD".
+ * @returns {boolean} True si se puede aplicar la anulación, false en caso
+ *   contrario.
+ * @throws {Error} Si el formato de la fecha es inválido o el tipo de DTE no
+ *   es válido.
+ */
+export function verifyApplyAnulation(tipoDte: string, date: string): boolean {
+  const fechaDTEParseada = moment(date, "YYYY-MM-DD");
+  if (!fechaDTEParseada.isValid())
+    throw new Error("Formato de fecha DTE inválido");
+
+  const daysDiference = moment().diff(fechaDTEParseada, "days");
+  const limits = { "01": 90, "03": 1 };
+
+  if (limits[tipoDte] !== undefined && daysDiference <= limits[tipoDte])
+    return true;
+  throw new Error(
+    "DTE fuera del plazo de disponibilidad o tipo de DTE inválido"
+  );
 }

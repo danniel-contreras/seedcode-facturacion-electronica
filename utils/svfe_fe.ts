@@ -12,7 +12,7 @@ import {
   ResponseMHSuccess,
 } from "../types/svf_dte/global";
 import { generate_uuid } from "./plugins/uuid";
-import { firmar_documento, send_to_mh } from "./services/svfe_services";
+import { firmar_documento, send_to_mh } from "./services/svfe.service";
 import {
   calc_exenta,
   calc_gravada,

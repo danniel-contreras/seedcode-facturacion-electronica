@@ -6,7 +6,7 @@ import axios, {
   CancelToken,
   CancelTokenSource,
 } from "axios";
-import { CHECK_URL, MH_DTE, MH_DTE_TEST } from "../contants";
+import { CHECK_URL, MH_DTE, MH_DTE_TEST } from "../constants";
 import {
   ICheckPayload,
   ICheckResponse,
@@ -14,6 +14,7 @@ import {
   ResponseMHSuccess,
   SendMHFailed,
 } from "../../types/svf_dte/global";
+import { SVFE_Invalidacion } from "../../types/svf_dte/invalidation.types";
 
 /**
  * Firma un documento con la autoridad certificadora del Ministerio de
@@ -26,7 +27,7 @@ import {
  *   solicitud, que contiene el documento firmado.
  */
 export const firmar_documento = (
-  data: SVFE_CF_SEND | SVFE_FC_SEND,
+  data: SVFE_CF_SEND | SVFE_FC_SEND | SVFE_Invalidacion,
   url: string,
   cancelToken: CancelTokenSource
 ): Promise<AxiosResponse<{ body: string }>> => {
