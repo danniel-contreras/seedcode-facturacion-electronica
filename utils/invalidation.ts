@@ -131,6 +131,16 @@ export const process_invalidation = async (
             })
             .catch(
               (error: AxiosError<ResponseMHSuccess, ResponseMHSuccess>) => {
+                clearTimeout(timeOutMH);
+
+                if (
+                  (error as AxiosError<ResponseMHSuccess>).response.data
+                    .estado &&
+                  (error as AxiosError<ResponseMHSuccess>).response.data
+                    .estado === "RECHAZADO"
+                ) {
+                  return (error as AxiosError<ResponseMHSuccess>).response.data;
+                }
                 if (axios.isCancel(error)) {
                   clearTimeout(timeOutMH);
                   return {
@@ -147,17 +157,6 @@ export const process_invalidation = async (
                     descripcionMsg: "TIEMPO DE RESPUESTA EXCEDIDO",
                     observaciones: ["SE TERMINO EL TIEMPO DE RESPUESTA"],
                   } as ResponseMHSuccess;
-                }
-
-                clearTimeout(timeOutMH);
-
-                if (
-                  (error as AxiosError<ResponseMHSuccess>).response.data
-                    .estado &&
-                  (error as AxiosError<ResponseMHSuccess>).response.data
-                    .estado === "RECHAZADO"
-                ) {
-                  return (error as AxiosError<ResponseMHSuccess>).response.data;
                 }
 
                 return {
