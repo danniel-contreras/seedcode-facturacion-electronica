@@ -17,7 +17,6 @@ import { send_invalidation_to_mh } from "./services/invalidation.service";
  *   - codPuntoVenta: El código del punto de venta.
  *   - tipoEstablecimiento: El tipo de establecimiento.
  *   - nombreEstablecimiento: El nombre del establecimiento.
- *   - codeGeneration: El código de generación.
  *   - tipoDte: El tipo de documento tributario electrónico.
  *   - document: El objeto que contiene los detalles del documento para anular.
  *   - customer: El cliente involucrado en la transacción.
@@ -33,7 +32,6 @@ export const generate_invalidation = (
     codPuntoVenta,
     tipoEstablecimiento,
     nombreEstablecimiento,
-    codeGeneration,
     tipoDte,
     document,
     customer,
@@ -48,7 +46,7 @@ export const generate_invalidation = (
       identificacion: {
         version: 2,
         ambiente: ambiente,
-        codigoGeneracion: codeGeneration,
+        codigoGeneracion: sale.codigoGeneracion,
         fecAnula: getElSalvadorDateTime().fecEmi,
         horAnula: getElSalvadorDateTime().horEmi,
       },
