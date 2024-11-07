@@ -206,8 +206,9 @@ export const process_svfe = async (
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_FC_Firmado;
+  factura: SVFE_FC_SEND
 }> => {
-  const data = generate_factura(
+  const factura = generate_factura(
     transmitter,
     codEstable,
     codPuntoVenta,
@@ -223,7 +224,7 @@ export const process_svfe = async (
     ambiente
   );
 
-  const firma = await firmar_documento(data, firmador_url, cancelToken);
+  const firma = await firmar_documento(factura, firmador_url, cancelToken);
 
   if (firma.data.body) {
     const payload = {
@@ -246,15 +247,17 @@ export const process_svfe = async (
         return {
           mh: response,
           firmado: {} as SVFE_FC_Firmado,
+          factura,
         };
       } else if (response.estado === "PROCESADO") {
         return {
           mh: response,
           firmado: {
-            ...data.dteJson,
+            ...factura.dteJson,
             respuestaMH: response,
             firma: firma.data.body,
           },
+          factura,
         };
       } else {
         return {
@@ -263,7 +266,7 @@ export const process_svfe = async (
             ambiente,
             versionApp: 1,
             estado: "RECHAZADO",
-            codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+            codigoGeneracion: factura.dteJson.identificacion.codigoGeneracion,
             selloRecibido: null,
             fhProcesamiento: new Date().toLocaleDateString(),
             clasificaMsg: "0",
@@ -272,6 +275,7 @@ export const process_svfe = async (
             observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
           },
           firmado: {} as SVFE_FC_Firmado,
+          factura,
         };
       }
     } catch {
@@ -281,7 +285,7 @@ export const process_svfe = async (
           ambiente,
           versionApp: 1,
           estado: "RECHAZADO",
-          codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+          codigoGeneracion: factura.dteJson.identificacion.codigoGeneracion,
           selloRecibido: null,
           fhProcesamiento: new Date().toLocaleDateString(),
           clasificaMsg: "0",
@@ -290,6 +294,7 @@ export const process_svfe = async (
           observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
         },
         firmado: {} as SVFE_FC_Firmado,
+        factura
       };
     }
   }
@@ -299,7 +304,7 @@ export const process_svfe = async (
       ambiente,
       versionApp: 1,
       estado: "RECHAZADO",
-      codigoGeneracion: data.dteJson.identificacion.codigoGeneracion,
+      codigoGeneracion: factura.dteJson.identificacion.codigoGeneracion,
       selloRecibido: null,
       fhProcesamiento: new Date().toLocaleDateString(),
       clasificaMsg: "0",
@@ -308,5 +313,6 @@ export const process_svfe = async (
       observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
     },
     firmado: {} as SVFE_FC_Firmado,
+    factura
   };
 };
