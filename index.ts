@@ -103,3 +103,23 @@ export {
 } from "./utils/invalidation";
 
 export { send_invalidation_to_mh } from "./utils/services/invalidation.service";
+
+export {
+  generate_excluded_subject,
+  generate_subject,
+  process_svfse,
+} from "./utils/svfe_fse";
+
+export { type ICartProductFSE } from "./types/svf_dte/global";
+
+export {
+  type SVFE_FSE_Firmado,
+  type SVFE_FSE_SEND,
+  type FSE_Apendice,
+  type FSE_Cuerpo_Documento,
+  type FSE_Identificacion,
+  type FSE_Emisor,
+  type FSE_Sujeto_Excluido,
+  type FSE_Resumen,
+  type FSVE_FSE,
+} from "./types/svf_dte/fse.types";

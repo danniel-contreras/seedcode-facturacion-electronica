@@ -92,6 +92,18 @@ export interface ICartProduct {
   no_gravado: number;
 }
 
+export interface ICartProductFSE {
+  numItem: number;
+  tipoItem: number;
+  cantidad: number;
+  codigo: string;
+  uniMedida: number;
+  descripcion: string;
+  precioUni: number;
+  montoDescu: number;
+  compra: number;
+}
+
 export interface ICartProductCCFE extends ICartProduct {
   tributos: string[];
 }

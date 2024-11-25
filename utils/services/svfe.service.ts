@@ -15,6 +15,7 @@ import {
   SendMHFailed,
 } from "../../types/svf_dte/global";
 import { SVFE_Invalidacion } from "../../types/svf_dte/invalidation.types";
+import { SVFE_FSE_SEND } from "../../types/svf_dte/fse.types";
 
 /**
  * Firma un documento con la autoridad certificadora del Ministerio de
@@ -27,7 +28,7 @@ import { SVFE_Invalidacion } from "../../types/svf_dte/invalidation.types";
  *   solicitud, que contiene el documento firmado.
  */
 export const firmar_documento = (
-  data: SVFE_CF_SEND | SVFE_FC_SEND | SVFE_Invalidacion,
+  data: SVFE_CF_SEND | SVFE_FC_SEND | SVFE_Invalidacion | SVFE_FSE_SEND,
   url: string,
   cancelToken: CancelTokenSource
 ): Promise<AxiosResponse<{ body: string }>> => {
