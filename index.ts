@@ -1,5 +1,5 @@
 export { generate_factura, process_svfe } from "./utils/svfe_fe";
-export { generate_credito_fiscal } from "./utils/svfe_ccfe";
+export { generate_credito_fiscal, process_svccfe, reteRenta } from "./utils/svfe_ccfe";
 
 export {
   type SVFE_FC,
