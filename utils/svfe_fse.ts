@@ -14,7 +14,7 @@ import {
   generate_control,
   getElSalvadorDateTime,
 } from "./settings";
-import { convertToNull, generate_emisor } from "./utils";
+import { convertToNull, generate_emisor, generate_emisor_fse } from "./utils";
 import { firmar_documento, send_to_mh } from "./services/svfe.service";
 
 /**
@@ -82,13 +82,12 @@ export const generate_excluded_subject = (
         ...getElSalvadorDateTime(),
       },
       emisor: {
-        ...generate_emisor(
+        ...generate_emisor_fse(
           transmitter,
           codEstable,
           codPuntoVenta,
           codEstableMH,
-          codPuntoVentaMH,
-          tipoEstablecimiento
+          codPuntoVentaMH
         ),
       },
       sujetoExcluido: generate_subject(sujetoExcluido),

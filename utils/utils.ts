@@ -52,6 +52,44 @@ export const generate_emisor = (
 };
 
 /**
+ * Generates an Emisor object for a FSE (Factura de Sustitución Electrónica) with
+ * the given transmitter and establishment and point of sale codes.
+ *
+ * @param {ITransmitter} transmitter - The transmitter object.
+ * @param {string} codEstable - The code of the establishment.
+ * @param {string} codPuntoVenta - The code of the point of sale.
+ * @param {string} codEstableMH - The code of the establishment in the MH system.
+ * @param {string} codPuntoVentaMH - The code of the point of sale in the MH system.
+ * @returns {Object} - The Emisor object.
+ */
+export const generate_emisor_fse = (
+  transmitter: ITransmitter,
+  codEstable: string,
+  codPuntoVenta: string,
+  codEstableMH: string,
+  codPuntoVentaMH: string
+) => {
+  return {
+    nit: transmitter.nit,
+    nrc: transmitter.nrc,
+    nombre: transmitter.nombre,
+    codActividad: transmitter.codActividad,
+    descActividad: transmitter.descActividad,
+    direccion: {
+      departamento: transmitter.direccion.departamento,
+      municipio: transmitter.direccion.municipio,
+      complemento: transmitter.direccion.complemento,
+    },
+    telefono: transmitter.telefono,
+    correo: transmitter.correo,
+    codEstable: codEstable,
+    codEstableMH: convertToNull(codEstableMH),
+    codPuntoVenta: codPuntoVenta,
+    codPuntoVentaMH: convertToNull(codPuntoVentaMH),
+  };
+};
+
+/**
  * Makes an array of FC_CuerpoDocumentoItems from an array of ICartProduct.
  * The prices are selected based on the value of the "price" field of the product.
  * If the price is one of the base prices, the price is selected.
