@@ -54,7 +54,13 @@ export const generate_excluded_subject = (
     return total + product.precioUni * product.cantidad;
   }, 0);
 
-  const reteRenta = subTotal * 0.1;
+  const filteredProducts = products.filter(
+    (product) => product.tipoItem === 2 || product.tipoItem === 3
+  );
+
+  const reteRenta = filteredProducts.reduce((total, product) => {
+    return total + product.precioUni * product.cantidad * 0.1;
+  }, 0);
 
   const total = subTotal - reteRenta;
 
