@@ -1,12 +1,16 @@
 {
   "name": "seedcode-facturacion-electronica",
-  "version": "1.8.2",
+  "version": "1.9.0",
   "description": "A library for generating electronic invoices",
   "main": "dist/index.js",
   "declaration": true,
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "clean": "rm -rf dist",
+    "build": "your-build-command",
+    "version:bump": "npm version patch",
+    "release": "npm run clean && npm run version:bump && npm run build && git add . && git commit -m \"Release v$(node -p -e \"require('./package.json').version\")\" && git push"
   },
   "keywords": [
     "typescript",
@@ -17,15 +21,15 @@
   "author": "Daniel Contreras <contrerasdannniel@gmail.com>",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^22.7.4",
+    "@types/node": "^22.10.1",
     "@types/uuid": "^10.0.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
-    "axios": "^1.7.7",
+    "axios": "^1.7.9",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.46",
-    "uuid": "^10.0.0"
+    "uuid": "^11.0.3"
   },
   "repository": {
     "url": "https://github.com/danniel-contreras/seedcode-facturacion-electronica",

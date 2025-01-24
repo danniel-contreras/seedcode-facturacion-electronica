@@ -4,10 +4,10 @@ import {
   FC_Identificacion,
   FC_PagosItems,
 } from "./fc.types";
-export interface FSE_Identificacion extends FC_Identificacion {}
+export interface FSE_Identificacion extends FC_Identificacion { }
 
 export interface FSE_Emisor {
-  nit:string,
+  nit: string,
   nrc: string,
   nombre: string,
   codActividad: string,
@@ -66,7 +66,7 @@ export interface FSE_Resumen {
   observaciones: string | null;
 }
 
-export interface FSE_Apendice extends FC_ApendiceItems {}
+export interface FSE_Apendice extends FC_ApendiceItems { }
 
 export interface FSVE_FSE {
   identificacion: FSE_Identificacion;
@@ -87,4 +87,54 @@ export interface SVFE_FSE_SEND {
   activo: boolean;
   passwordPri: string;
   dteJson: FSVE_FSE;
+}
+
+export interface FSE_Invalidacion_Documento {
+  tipoDte: string;
+  codigoGeneracion: string;
+  codigoGeneracionR: string | null;
+  selloRecibido: string;
+  numeroControl: string;
+  fecEmi: string;
+  montoIva: number | null;
+  tipoDocumento: string | null;
+  numDocumento: string | null;
+  nombre: string;
+}
+
+export interface FSE_Invalidacion_Motivo {
+  tipoAnulacion: number
+  motivoAnulacion: string | null
+  nombreResponsable: string
+  tipDocResponsable: string
+  numDocResponsable: string
+  nombreSolicita: string
+  tipDocSolicita: string
+  numDocSolicita: string
+}
+
+export interface FSE_Invalidacion {
+  nit: string,
+  passwordPri: string,
+  dteJson: {
+    identificacion: {
+      version: 2,
+      ambiente: "00" | "01",
+      codigoGeneracion: string,
+      fecAnula: string,
+      horAnula: string
+    },
+    emisor: {
+      nit: string,
+      nombre: string,
+      tipoEstablecimiento: string,
+      telefono: string,
+      correo: string,
+      codEstable: string,
+      codPuntoVenta: string,
+      nomEstablecimiento: string
+    },
+    documento: FSE_Invalidacion_Documento,
+    motivo: FSE_Invalidacion_Motivo
+  }
 }

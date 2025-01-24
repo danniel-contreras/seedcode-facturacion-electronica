@@ -1,5 +1,5 @@
 import { CancelTokenSource } from "axios";
-import { SVFE_FSE_Firmado, SVFE_FSE_SEND } from "../types/svf_dte/fse.types";
+import { FSE_Invalidacion_Documento, FSE_Invalidacion_Motivo, SVFE_FSE_Firmado, SVFE_FSE_SEND } from "../types/svf_dte/fse.types";
 import {
   Customer,
   ICartProduct,
@@ -313,3 +313,32 @@ export const process_svfse = async (
     sujeto_excluido: sujeto_excluido_gen,
   };
 };
+
+export const generate_invalidation_fse = (transmitter: ITransmitter, documento: FSE_Invalidacion_Documento, motivo: FSE_Invalidacion_Motivo, tipoEstablecimiento: string, nomEstablecimiento: string, codEstable: string, codPuntoVenta: string, ambiente: "00" | "01") => {
+  return {
+    identificacion: {
+      version: 2,
+      ambiente: ambiente,
+      codigoGeneracion: generate_uuid().toUpperCase(),
+      fecAnula: getElSalvadorDateTime().fecEmi,
+      horAnula: getElSalvadorDateTime().horEmi
+
+    },
+    emisor: {
+      nit: transmitter.nit,
+      nombre: transmitter.nombre,
+      tipoEstablecimiento: tipoEstablecimiento,
+      telefono: transmitter.telefono,
+      correo: transmitter.correo,
+      codEstable, 
+      codPuntoVenta,
+      nomEstablecimiento
+    },
+    documento,
+    motivo
+  }
+}
+
+export const proccess_invalidation_fse = () => {
+
+}
