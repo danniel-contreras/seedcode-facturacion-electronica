@@ -275,14 +275,12 @@ export const calDiscount = (productsCarts: ICartProduct[]): number => {
  * @param {ICartProduct[]} productsCarts - The products in the cart.
  * @returns {number} - The total iva amount of the cart.
  */
+
 export const total_iva = (productsCarts: ICartProduct[]): number => {
   return productsCarts
     .map((cp) => {
-      const total = Number(cp.price) * Number(cp.quantity);
-      const total_with_discount = total - cp.monto_descuento;
-
-      const iva = total_with_discount / 1.13;
-
+      const total = Number(cp.total_gravada) * Number(cp.quantity);
+      const iva = total / 1.13;
       return total - iva;
     })
     .reduce((a, b) => a + b, 0);
