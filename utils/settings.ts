@@ -279,9 +279,8 @@ export const calDiscount = (productsCarts: ICartProduct[]): number => {
 export const total_iva = (productsCarts: ICartProduct[]): number => {
   return productsCarts
     .map((cp) => {
-      const total = Number(cp.total_gravada) * Number(cp.quantity);
-      const iva = total / 1.13;
-      return total - iva;
+      const iva = +cp.total_gravada / 1.13;
+      return +cp.total_gravada - iva;
     })
     .reduce((a, b) => a + b, 0);
 };
