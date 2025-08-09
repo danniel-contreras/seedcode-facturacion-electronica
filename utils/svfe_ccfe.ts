@@ -15,6 +15,7 @@ import { generate_uuid } from "./plugins/uuid";
 import { firmar_documento, send_to_mh } from "./services/svfe.service";
 import {
   add_iva,
+  calc_gravada,
   calcularDescuento,
   calDiscount,
   convertCurrencyFormat,
@@ -69,10 +70,20 @@ export const generate_credito_fiscal = (
   rete: number = 0,
   includeIva: boolean = false
 ): SVFE_CF_SEND => {
-  const subTotal = includeIva
-    ? Number(total(products_carts) / 1.13)
-    : total(products_carts);
+  // Generar cuerpo del documento
+  const cuerpo = make_cuerpo_documento_fiscal(includeIva, products_carts);
+
+  // totalGravada desde los items
+  const totalGravada = Number(
+    cuerpo.reduce((sum, item) => sum + item.ventaGravada, 0).toFixed(2)
+  );
+
+  // IVA total
   const iva = includeIva ? total_iva(products_carts) : add_iva(products_carts);
+
+  // Subtotal sin IVA (igual a totalGravada)
+  const subTotal = totalGravada;
+
   const MontoTotal = subTotal + iva;
   const retentionR = reteRenta(rete, MontoTotal);
 
@@ -113,12 +124,12 @@ export const generate_credito_fiscal = (
       receptor,
       otrosDocumentos: null,
       ventaTercero: null,
-      cuerpoDocumento: make_cuerpo_documento_fiscal(includeIva, products_carts),
+      cuerpoDocumento: cuerpo,
       resumen: {
         totalNoSuj: 0,
         totalExenta: 0,
-        totalGravada: Number(subTotal.toFixed(2)),
-        subTotalVentas: Number(subTotal.toFixed(2)),
+        totalGravada: totalGravada,
+        subTotalVentas: totalGravada,
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
@@ -136,7 +147,7 @@ export const generate_credito_fiscal = (
             valor: Number(iva.toFixed(2)),
           },
         ],
-        subTotal: Number(subTotal.toFixed(2)),
+        subTotal,
         ivaRete1: Number(retencion.toFixed(2)),
         reteRenta: retentionR,
         ivaPerci1: 0,
@@ -148,15 +159,13 @@ export const generate_credito_fiscal = (
         ),
         saldoFavor: 0,
         condicionOperacion: condition,
-        pagos: tipo_pago.map((tp) => {
-          return {
-            codigo: tp.codigo,
-            plazo: tp.plazo,
-            periodo: tp.periodo,
-            montoPago: tp.montoPago,
-            referencia: tp.referencia,
-          };
-        }),
+        pagos: tipo_pago.map((tp) => ({
+          codigo: tp.codigo,
+          plazo: tp.plazo,
+          periodo: tp.periodo,
+          montoPago: tp.montoPago,
+          referencia: tp.referencia,
+        })),
         numPagoElectronico: null,
       },
       extension: null,

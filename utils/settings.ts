@@ -277,12 +277,13 @@ export const calDiscount = (productsCarts: ICartProduct[]): number => {
  */
 
 export const total_iva = (productsCarts: ICartProduct[]): number => {
-  return productsCarts
-    .map((cp) => {
-      const iva = +cp.total_gravada / 1.13;
-      return +cp.total_gravada - iva;
-    })
-    .reduce((a, b) => a + b, 0);
+  const totalConIva = productsCarts.reduce(
+    (sum, cp) => sum + cp.total_gravada,
+    0
+  );
+
+  const iva = totalConIva - totalConIva / 1.13;
+  return Number(iva.toFixed(2));
 };
 
 /**
