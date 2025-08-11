@@ -152,7 +152,9 @@ export const make_cuerpo_documento_factura = (
  * If not, the first non-zero price is selected.
  */
 export const make_cuerpo_documento_fiscal = (
-  includeIva: boolean,
+  includeIVA = true,
+  saleType: "Gravada" | "Exenta" | "NoSujeta",
+  $discountPercentage: number,
   products_cart: ICartProduct[]
 ) => {
   return products_cart.map((cp, index) => {
@@ -163,30 +165,58 @@ export const make_cuerpo_documento_fiscal = (
       Number(cp.priceC),
     ];
 
-    let price = prices.includes(Number(cp.price))
-      ? Number(cp.price)
-      : Number(cp.price) === Number(prices[0])
+    const rawPrice = Number(cp.price);
+    const price = prices.includes(rawPrice)
+      ? rawPrice
+      : rawPrice === Number(prices[0])
       ? Number(prices[1])
-      : Number(cp.price);
+      : rawPrice;
 
-    includeIva ? (price = Number(quitIva(price))) : (price = price);
+    const quantity = Number(cp.quantity);
+    const totalWithTax = price * quantity;
+    const unitPriceWithoutTax =
+      includeIVA && saleType === "Gravada" ? +(price / 1.13).toFixed(4) : price;
+    const totalWithoutTax = +(unitPriceWithoutTax * quantity).toFixed(4);
+
+    const discountBase =
+      saleType === "Gravada" ? totalWithoutTax : totalWithTax;
+    const discountAmount = +(
+      (discountBase * $discountPercentage) /
+      100
+    ).toFixed(2);
+
+    const netGravada = +(totalWithoutTax - discountAmount).toFixed(2);
+    const netNoSujOrEx = +(totalWithTax - discountAmount).toFixed(2);
+
+    const ventaGravada = saleType === "Gravada" ? netGravada : 0;
+    const ventaExenta = saleType === "Exenta" ? netNoSujOrEx : 0;
+    const ventaNoSuj = saleType === "NoSujeta" ? netNoSujOrEx : 0;
+
+    const tributos = saleType === "Gravada" ? ["20"] : null;
+
     return {
       numItem: index + 1,
       tipoItem: Number(cp.tipoItem),
       uniMedida: Number(cp.uniMedida),
       numeroDocumento: null,
-      cantidad: cp.quantity,
-      codigo: convertToNull(cp.productCode),
+      cantidad: quantity,
+      codigo: cp.productCode !== "N/A" ? cp.productCode : null,
       codTributo: null,
       descripcion: cp.productName,
-      precioUni: Number(price.toFixed(4)),
-      montoDescu: Number((cp.monto_descuento * cp.quantity).toFixed(4)),
-      ventaNoSuj: 0,
-      ventaExenta: 0,
-      ventaGravada: Number((price! * cp.quantity).toFixed(4)),
-      tributos: ["20"],
-      psv: 0,
-      noGravado: cp.no_gravado,
+      precioUni:
+        includeIVA && saleType === "Gravada"
+          ? +unitPriceWithoutTax.toFixed(4)
+          : +price.toFixed(4),
+      montoDescu: discountAmount,
+      ventaNoSuj,
+      ventaExenta,
+      ventaGravada,
+      tributos,
+      psv:
+        includeIVA && saleType === "Gravada"
+          ? +unitPriceWithoutTax.toFixed(2)
+          : +price.toFixed(2),
+      noGravado: 0,
     };
   });
 };

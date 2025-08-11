@@ -52,6 +52,7 @@ import { generate_emisor, make_cuerpo_documento_fiscal } from "./utils";
  * @param {boolean} [includeIva=false] - Whether to include IVA in the total.
  * @returns {SVFE_CF_SEND} - The Crédito Fiscal Electrónico object.
  */
+
 export const generate_credito_fiscal = (
   transmitter: ITransmitter,
   codEstable: string,
@@ -68,24 +69,33 @@ export const generate_credito_fiscal = (
   ambiente: string = "00",
   tributo: TipoTributo,
   rete: number = 0,
-  includeIva: boolean = false
+  includeIva: boolean = true,
+  typeSale: string,
+  discountPercentage: number
 ): SVFE_CF_SEND => {
-  // Generar cuerpo del documento
-  const cuerpo = make_cuerpo_documento_fiscal(includeIva, products_carts);
+  //MONTO SIN DESCUENTO
+  const totalGravada = products_carts
+    .map((cp) => Number(cp.quantity) * Number(cp.price))
+    .reduce((a, b) => a + b, 0);
 
-  // totalGravada desde los items
-  const totalGravada = Number(
-    cuerpo.reduce((sum, item) => sum + item.ventaGravada, 0).toFixed(2)
-  );
+  //MONTO SIN IVA
+  const gravadaWithoutIva = totalGravada / 1.13;
 
-  // IVA total
-  const iva = includeIva ? total_iva(products_carts) : add_iva(products_carts);
+  //MONTO DESCUENTO
+  const $totalDiscount =
+    typeSale === "Gravada"
+      ? (gravadaWithoutIva *
+          (isNaN(discountPercentage) ? 0 : discountPercentage)) /
+        100
+      : (totalGravada * (isNaN(discountPercentage) ? 0 : discountPercentage)) /
+        100;
 
-  // Subtotal sin IVA (igual a totalGravada)
-  const subTotal = totalGravada;
+  const $totalGravada =
+    gravadaWithoutIva - (isNaN($totalDiscount) ? 0 : $totalDiscount);
+  const $totalNoSujOrEx =
+    totalGravada - (isNaN($totalDiscount) ? 0 : $totalDiscount);
 
-  const MontoTotal = subTotal + iva;
-  const retentionR = reteRenta(rete, MontoTotal);
+  const totalIva = $totalGravada * 0.13;
 
   return {
     nit: transmitter.nit,
@@ -124,48 +134,77 @@ export const generate_credito_fiscal = (
       receptor,
       otrosDocumentos: null,
       ventaTercero: null,
-      cuerpoDocumento: cuerpo,
+      cuerpoDocumento: make_cuerpo_documento_fiscal(
+        includeIva,
+        "Gravada",
+        0,
+        products_carts
+      ),
       resumen: {
-        totalNoSuj: 0,
-        totalExenta: 0,
-        totalGravada: totalGravada,
-        subTotalVentas: totalGravada,
+        totalNoSuj: ["NoSujeta"].includes(typeSale!)
+          ? Number($totalNoSujOrEx.toFixed(2))
+          : 0,
+        totalExenta: ["Exenta"].includes(typeSale!)
+          ? Number($totalNoSujOrEx.toFixed(2))
+          : 0,
+        totalGravada: ["Gravada"].includes(typeSale!)
+          ? Number($totalGravada.toFixed(2))
+          : 0,
+        subTotalVentas:
+          typeSale === "Gravada"
+            ? Number($totalGravada.toFixed(2))
+            : Number($totalNoSujOrEx.toFixed(2)),
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
-        porcentajeDescuento: Number(
-          calcularDescuento(
-            total_without_discount(products_carts),
-            subTotal
-          ).porcentajeDescuento.toFixed(2)
+        porcentajeDescuento: isNaN(discountPercentage) ? 0 : discountPercentage,
+        totalDescu: Number(
+          (isNaN($totalDiscount) ? 0 : $totalDiscount).toFixed(2)
         ),
-        totalDescu: Number(calDiscount(products_carts).toFixed(2)),
-        tributos: [
-          {
-            codigo: tributo!.codigo,
-            descripcion: tributo!.valores,
-            valor: Number(iva.toFixed(2)),
-          },
-        ],
-        subTotal,
+        tributos: ["NoSujeta", "Exenta"].includes(typeSale!)
+          ? null
+          : [
+              {
+                codigo: tributo!.codigo,
+                descripcion: tributo!.valores,
+                valor: Number(totalIva.toFixed(2)),
+              },
+            ],
+        subTotal:
+          typeSale === "Gravada"
+            ? Number($totalGravada.toFixed(2))
+            : Number($totalNoSujOrEx.toFixed(2)),
         ivaRete1: Number(retencion.toFixed(2)),
-        reteRenta: retentionR,
+        reteRenta: Number(rete),
         ivaPerci1: 0,
-        montoTotalOperacion: Number(MontoTotal.toFixed(2)),
+        montoTotalOperacion:
+          typeSale === "Gravada"
+            ? Number(($totalGravada + totalIva).toFixed(2))
+            : Number($totalNoSujOrEx.toFixed(2)),
         totalNoGravado: 0,
-        totalPagar: Number((MontoTotal - retencion - retentionR).toFixed(2)),
+        totalPagar:
+          typeSale === "Gravada"
+            ? Number(($totalGravada - retencion + totalIva).toFixed(2))
+            : Number($totalNoSujOrEx.toFixed(2)),
         totalLetras: convertCurrencyFormat(
-          (MontoTotal - retencion - retentionR).toFixed(2)
+          typeSale === "Gravada"
+            ? ($totalGravada - retencion + totalIva).toFixed(2)
+            : $totalNoSujOrEx.toFixed(2)
         ),
         saldoFavor: 0,
         condicionOperacion: condition,
-        pagos: tipo_pago.map((tp) => ({
-          codigo: tp.codigo,
-          plazo: tp.plazo,
-          periodo: tp.periodo,
-          montoPago: tp.montoPago,
-          referencia: tp.referencia,
-        })),
+        pagos:
+          $totalGravada > 0 || $totalNoSujOrEx > 0
+            ? tipo_pago.map((tp) => {
+                return {
+                  codigo: tp.codigo,
+                  plazo: tp.plazo,
+                  periodo: tp.periodo,
+                  montoPago: tp.montoPago,
+                  referencia: "",
+                };
+              })
+            : null,
         numPagoElectronico: null,
       },
       extension: null,
@@ -257,7 +296,9 @@ export const process_svccfe = async (
     ambiente,
     tributo,
     rete,
-    includeIva
+    includeIva,
+    "Gravada",
+    0
   );
 
   const firma = await firmar_documento(
