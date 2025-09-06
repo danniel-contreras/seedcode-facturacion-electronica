@@ -179,7 +179,7 @@ export const generate_credito_fiscal = (
         ivaPerci1: 0,
         montoTotalOperacion:
           typeSale === "Gravada"
-            ? Number(($totalGravada + totalIva).toFixed(2))
+            ? Number(($totalGravada + totalIva - retencion).toFixed(2))
             : Number($totalNoSujOrEx.toFixed(2)),
         totalNoGravado: 0,
         totalPagar:
