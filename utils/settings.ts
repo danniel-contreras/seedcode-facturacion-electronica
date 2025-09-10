@@ -69,6 +69,12 @@ export function convertCurrencyFormat(input: string) {
     if (num < 1000) {
       const hundred = Math.floor(num / 100);
       const remainder = num % 100;
+
+      if (hundred === 1 && remainder > 0) {
+        // Caso especial: 101 a 199 → "CIENTO ..."
+        return "CIENTO" + (remainder > 0 ? ` ${numberToWords(remainder)}` : "");
+      }
+
       const remainderInWords =
         remainder > 0 ? ` ${numberToWords(remainder)}` : "";
       return hundreds[hundred] + remainderInWords;
