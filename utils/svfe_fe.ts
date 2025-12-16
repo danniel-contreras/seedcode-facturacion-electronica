@@ -68,8 +68,13 @@ export const generate_factura = (
   condition: number,
   tipo_pago: FC_PagosItems[],
   ivaRete1 = 0,
-  ambiente = "00"
+  ambiente = "00",
+  fecEmi?: string,
+  horEmi?: string
 ): SVFE_FC_SEND => {
+  const fechaHora =
+    fecEmi && horEmi ? { fecEmi, horEmi } : getElSalvadorDateTime();
+
   return {
     nit: transmitter.nit,
     activo: true,
@@ -91,7 +96,7 @@ export const generate_factura = (
         tipoContingencia: null,
         motivoContin: null,
         tipoMoneda: "USD",
-        ...getElSalvadorDateTime(),
+        ...fechaHora,
       },
       documentoRelacionado: null,
       emisor: {
@@ -159,7 +164,6 @@ export const generate_factura = (
   };
 };
 
-
 /**
  * Generates a Factura Electrónica object, signs it, and sends it to the MH
  * server. The function returns an object with two properties: `mh`, which
@@ -202,11 +206,13 @@ export const process_svfe = async (
   ambiente = "00",
   cancelToken: CancelTokenSource,
   firmador_url: string,
-  token: string
+  token: string,
+  fecEmi?: string,
+  horEmi?: string
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_FC_Firmado;
-  factura: SVFE_FC_SEND
+  factura: SVFE_FC_SEND;
 }> => {
   const factura = generate_factura(
     transmitter,
@@ -221,7 +227,9 @@ export const process_svfe = async (
     condition,
     tipo_pago,
     ivaRete1,
-    ambiente
+    ambiente,
+    fecEmi,
+    horEmi
   );
 
   const firma = await firmar_documento(factura, firmador_url, cancelToken);
@@ -294,7 +302,7 @@ export const process_svfe = async (
           observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
         },
         firmado: {} as SVFE_FC_Firmado,
-        factura
+        factura,
       };
     }
   }
@@ -313,6 +321,6 @@ export const process_svfe = async (
       observaciones: ["NO SE OBTUVO RESPUESTA DEL SERVIDOR"],
     },
     firmado: {} as SVFE_FC_Firmado,
-    factura
+    factura,
   };
 };
