@@ -7,7 +7,7 @@ export interface ResponseMHSuccess {
   estado: string;
   fhProcesamiento: string;
   observaciones: any[];
-  selloRecibido: string;
+  selloRecibido: string | null;
   version: number;
   versionApp: number;
 }

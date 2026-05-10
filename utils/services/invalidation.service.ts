@@ -19,7 +19,8 @@ export const send_invalidation_to_mh = (
   payload: IInvalidationToMH,
   ambiente: "01" | "00" = "00",
   token: string,
-  cancelToken: CancelTokenSource
+  cancelToken: CancelTokenSource,
+  nit: string
 ) => {
   return axios.post<IResponseInvalidationMH>(
     ambiente === "00" ? MH_INVALIDATION_TEST : MH_INVALIDATION,
@@ -28,7 +29,9 @@ export const send_invalidation_to_mh = (
     },
     {
       headers: {
-        Authorization: token,
+        "mh-token": token,
+        "x-tenant-nit": nit,
+        "x-tenant-ambiente": ambiente,
       },
       cancelToken: cancelToken.token,
     }

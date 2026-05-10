@@ -248,7 +248,8 @@ export const process_svfe = async (
         payload,
         ambiente as "00" | "01",
         token,
-        cancelToken
+        cancelToken,
+        transmitter.nit
       );
 
       if (response.estado === "RECHAZADO") {

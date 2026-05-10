@@ -51,7 +51,8 @@ export const send_to_mh = async (
   payload: PayloadMH,
   ambiente: "01" | "00",
   token: string,
-  cancelToken: CancelTokenSource
+  cancelToken: CancelTokenSource,
+  nit: string,
 ): Promise<ResponseMHSuccess> => {
   try {
     const response = await axios.post<ResponseMHSuccess>(
@@ -59,7 +60,9 @@ export const send_to_mh = async (
       payload,
       {
         headers: {
-          Authorization: token,
+          'mh-token': token,
+          'x-tenant-nit': nit,
+          'x-tenant-ambiente': ambiente
         },
         cancelToken: cancelToken.token,
       }
