@@ -123,7 +123,8 @@ export const process_invalidation = async (
             payload,
             ambiente,
             token,
-            mhCancelToken
+            mhCancelToken,
+            data.nit,
           )
             .then(({ data }) => {
               clearTimeout(timeOutMH);
@@ -133,13 +134,12 @@ export const process_invalidation = async (
               (error: AxiosError<ResponseMHSuccess, ResponseMHSuccess>) => {
                 clearTimeout(timeOutMH);
 
+                const axiosError = error as AxiosError<ResponseMHSuccess>;
                 if (
-                  (error as AxiosError<ResponseMHSuccess>).response.data
-                    .estado &&
-                  (error as AxiosError<ResponseMHSuccess>).response.data
-                    .estado === "RECHAZADO"
+                  axiosError.response?.data?.estado &&
+                  axiosError.response.data.estado === "RECHAZADO"
                 ) {
-                  return (error as AxiosError<ResponseMHSuccess>).response.data;
+                  return axiosError.response.data;
                 }
                 if (axios.isCancel(error)) {
                   clearTimeout(timeOutMH);
