@@ -33,27 +33,31 @@ import { generate_emisor, make_cuerpo_documento_fiscal } from "./utils";
  * and establishment and point of sale codes, the next correlative, the
  * products, the customer, the condition, the type of payment, and the
  * environment.
- *
- * @param {ITransmitter} transmitter - The transmitter object.
- * @param {string} codEstable - The code of the establishment.
- * @param {string} codPuntoVenta - The code of the point of sale.
- * @param {string} codEstableMH - The code of the establishment in the MH system.
- * @param {string} codPuntoVentaMH - The code of the point of sale in the MH system.
- * @param {string} tipoEstablecimiento - The type of establishment.
- * @param {number} nextCorrelative - The next correlative.
- * @param {CF_Receptor} receptor - The customer.
- * @param {ICartProduct[]} products_carts - The products.
- * @param {CF_PagosItems[]} tipo_pago - The type of payment.
- * @param {number} retencion - The first IVA retention.
- * @param {number} condition - The condition.
- * @param {string} [ambiente="00"] - The environment.
- * @param {TipoTributo} [tributo=TipoTributo.IVA] - The type of tax.
- * @param {number} [rete=0] - The first tax.
- * @param {boolean} [includeIva=false] - Whether to include IVA in the total.
- * @returns {SVFE_CF_SEND} - The Crédito Fiscal Electrónico object.
+ 
+ * @param {?string } numeroControl - Número de control.
+ * @param {?string } codigoGeneracion - Código de generación.
+  * @param { ITransmFitter } transmitter - The transmitter object.
+ * @param { string } codEstable - The code of the establishment.
+ * @param { string } codPuntoVenta - The code of the point of sale.
+ * @param { string } codEstableMH - The code of the establishment in the MH system.
+ * @param { string } codPuntoVentaMH - The code of the point of sale in the MH system.
+ * @param { string } tipoEstablecimiento - The type of establishment.
+ * @param { number } nextCorrelative - The next correlative.
+ * @param { CF_Receptor } receptor - The customer.
+ * @param { ICartProduct[] } products_carts - The products.
+ * @param { CF_PagosItems[] } tipo_pago - The type of payment.
+ * @param { number } retencion - The first IVA retention.
+ * @param { number } condition - The condition.
+ * @param { string } [ambiente = "00"] - The environment.
+ * @param { TipoTributo } [tributo = TipoTributo.IVA] - The type of tax.
+ * @param { number } [rete = 0] - The first tax.
+ * @param { boolean } [includeIva = false] - Whether to include IVA in the total.
+ * @returns { SVFE_CF_SEND } - The Crédito Fiscal Electrónico object.
  */
 
 export const generate_credito_fiscal = (
+  numeroControl: string | null,
+  codigoGeneracion: string | null,
   transmitter: ITransmitter,
   codEstable: string,
   codPuntoVenta: string,
@@ -71,12 +75,14 @@ export const generate_credito_fiscal = (
   rete: number = 0,
   includeIva: boolean = true,
   typeSale: string,
-  discountPercentage: number
+  discountPercentage: number,
+
 ): SVFE_CF_SEND => {
   //MONTO SIN DESCUENTO
   const totalGravada = products_carts
     .map((cp) => Number(cp.quantity) * Number(cp.price))
     .reduce((a, b) => a + b, 0);
+  const noGravado = products_carts.reduce((a, b) => a + b.no_gravado, 0)
 
   //MONTO SIN IVA
   const gravadaWithoutIva = totalGravada / 1.13;
@@ -85,10 +91,10 @@ export const generate_credito_fiscal = (
   const $totalDiscount =
     typeSale === "Gravada"
       ? (gravadaWithoutIva *
-          (isNaN(discountPercentage) ? 0 : discountPercentage)) /
-        100
+        (isNaN(discountPercentage) ? 0 : discountPercentage)) /
+      100
       : (totalGravada * (isNaN(discountPercentage) ? 0 : discountPercentage)) /
-        100;
+      100;
 
   const $totalGravada =
     gravadaWithoutIva - (isNaN($totalDiscount) ? 0 : $totalDiscount);
@@ -104,10 +110,10 @@ export const generate_credito_fiscal = (
     dteJson: {
       identificacion: {
         version: 3,
-        codigoGeneracion: generate_uuid().toUpperCase(),
+        codigoGeneracion: codigoGeneracion ?? generate_uuid().toUpperCase(),
         ambiente: ambiente,
         tipoDte: "03",
-        numeroControl: generate_control(
+        numeroControl: numeroControl ?? generate_control(
           "03",
           codEstable,
           codPuntoVenta,
@@ -164,12 +170,12 @@ export const generate_credito_fiscal = (
         tributos: ["NoSujeta", "Exenta"].includes(typeSale!)
           ? null
           : [
-              {
-                codigo: tributo!.codigo,
-                descripcion: tributo!.valores,
-                valor: Number(totalIva.toFixed(2)),
-              },
-            ],
+            {
+              codigo: tributo!.codigo,
+              descripcion: tributo!.valores,
+              valor: Number(totalIva.toFixed(2)),
+            },
+          ],
         subTotal:
           typeSale === "Gravada"
             ? Number($totalGravada.toFixed(2))
@@ -181,14 +187,14 @@ export const generate_credito_fiscal = (
           typeSale === "Gravada"
             ? Number(($totalGravada + totalIva).toFixed(2))
             : Number($totalNoSujOrEx.toFixed(2)),
-        totalNoGravado: 0,
+        totalNoGravado: Number(noGravado.toFixed(2)),
         totalPagar:
           typeSale === "Gravada"
-            ? Number(($totalGravada - retencion + totalIva).toFixed(2))
+            ? Number(($totalGravada - retencion + totalIva + noGravado).toFixed(2))
             : Number($totalNoSujOrEx.toFixed(2)),
         totalLetras: convertCurrencyFormat(
           typeSale === "Gravada"
-            ? ($totalGravada - retencion + totalIva).toFixed(2)
+            ? ($totalGravada - retencion + totalIva + noGravado).toFixed(2)
             : $totalNoSujOrEx.toFixed(2)
         ),
         saldoFavor: 0,
@@ -196,14 +202,14 @@ export const generate_credito_fiscal = (
         pagos:
           $totalGravada > 0 || $totalNoSujOrEx > 0
             ? tipo_pago.map((tp) => {
-                return {
-                  codigo: tp.codigo,
-                  plazo: tp.plazo,
-                  periodo: tp.periodo,
-                  montoPago: tp.montoPago,
-                  referencia: "",
-                };
-              })
+              return {
+                codigo: tp.codigo,
+                plazo: tp.plazo,
+                periodo: tp.periodo,
+                montoPago: tp.montoPago,
+                referencia: "",
+              };
+            })
             : null,
         numPagoElectronico: null,
       },
@@ -251,6 +257,8 @@ export const reteRenta = (rete: number, total: number) => {
  * @param {CancelTokenSource} cancelToken - The cancel token.
  * @param {string} firmador_url - The URL of the firmador service.
  * @param {string} token - The token to use for the MH server.
+ * @param {string|null} [numeroControl=null] - The numeroControl to use for the MH server.
+ * @param {string|null} [codigoGeneracion=null] - The codigoGeneracion to use for the MH server.
  * @returns {Promise<{mh: ResponseMHSuccess; firmado: SVFE_CF_Firmado; credito_fiscal: SVFE_CF_SEND;}>}
  *  A promise that resolves with an object containing the response from the MH
  *  server and the signed document.
@@ -274,13 +282,17 @@ export const process_svccfe = async (
   includeIva: boolean = false,
   cancelToken: CancelTokenSource,
   firmador_url: string,
-  token: string
+  token: string,
+  numeroControl: string | null,
+  codigoGeneracion: string | null
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_CF_Firmado;
   credito_fiscal: SVFE_CF_SEND;
 }> => {
   const credito_fiscal = generate_credito_fiscal(
+    numeroControl,
+    codigoGeneracion,
     transmitter,
     codEstable,
     codPuntoVenta,
@@ -299,6 +311,7 @@ export const process_svccfe = async (
     includeIva,
     "Gravada",
     0
+
   );
 
   const firma = await firmar_documento(
