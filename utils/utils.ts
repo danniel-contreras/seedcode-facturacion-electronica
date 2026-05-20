@@ -111,8 +111,8 @@ export const make_cuerpo_documento_factura = (
     const price = prices.includes(Number(cp.price))
       ? Number(cp.price)
       : Number(cp.price) === Number(prices[0])
-      ? Number(prices[1])
-      : Number(cp.price);
+        ? Number(prices[1])
+        : Number(cp.price);
 
     return {
       numItem: index + 1,
@@ -169,8 +169,8 @@ export const make_cuerpo_documento_fiscal = (
     const price = prices.includes(rawPrice)
       ? rawPrice
       : rawPrice === Number(prices[0])
-      ? Number(prices[1])
-      : rawPrice;
+        ? Number(prices[1])
+        : rawPrice;
 
     const quantity = Number(cp.quantity);
     const totalWithTax = price * quantity;
@@ -213,10 +213,8 @@ export const make_cuerpo_documento_fiscal = (
       ventaGravada,
       tributos,
       psv:
-        includeIVA && saleType === "Gravada"
-          ? +unitPriceWithoutTax.toFixed(2)
-          : +price.toFixed(2),
-      noGravado: 0,
+        0,
+      noGravado: cp.no_gravado,
     };
   });
 };
@@ -243,14 +241,14 @@ export const generate_receptor = (value: Customer) => {
       Number(value!.nrc) !== 0 && value!.nrc
         ? "36"
         : value!.tipoDocumento === "0" || value.tipoDocumento === "N/A"
-        ? null
-        : value!.tipoDocumento,
+          ? null
+          : value!.tipoDocumento,
     numDocumento:
       Number(value!.nrc) !== 0 && value!.nrc
         ? value!.nit
         : value!.numDocumento === "0" || value.numDocumento === "N/A"
-        ? null
-        : agregarGuion(value!.numDocumento),
+          ? null
+          : agregarGuion(value!.numDocumento),
     nrc: convertToNull(value!.nrc),
     nombre: value!.nombre,
     codActividad: convertToNull(value!.codActividad),
