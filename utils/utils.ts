@@ -185,8 +185,8 @@ export const make_cuerpo_documento_fiscal = (
       100
     ).toFixed(2);
 
-    const netGravada = +(totalWithoutTax - discountAmount).toFixed(2);
-    const netNoSujOrEx = +(totalWithTax - discountAmount).toFixed(2);
+    const netGravada = +(totalWithoutTax - discountAmount).toFixed(4);
+    const netNoSujOrEx = +(totalWithTax - discountAmount).toFixed(4);
 
     const ventaGravada = saleType === "Gravada" ? netGravada : 0;
     const ventaExenta = saleType === "Exenta" ? netNoSujOrEx : 0;
