@@ -8,6 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rimraf dist",
+    "prepublishOnly":"npm run build",
     "build": "tsc",
     "version:bump": "npm version patch",
     "release": "npm run clean && npm run version:bump && npm run build && git add . && git commit -m \"Release v$(node -p -e \"require('./package.json').version\")\" && git push"

@@ -71,8 +71,8 @@ export const generate_invalidation = (
         tipoDocumento: convertToNull(customer.tipoDocumento),
         numDocumento: convertToNull(customer.numDocumento),
         nombre: customer.name,
-        correo:document.correo ?? "",
-        telefono:document.telefono ?? ""
+        correo:document?.correo ?? "",
+        telefono:document?.telefono ?? ""
       },
       motivo: {
         tipoAnulacion: Number(document.tipoAnulacion),
