@@ -37,6 +37,8 @@ export class InvalidationPayload {
     nombreSolicita: string;
     tipDocSolicita: string;
     numDocSolicita: string;
+    correo:string;
+    telefono:string;
   };
   customer: {
     tipoDocumento: string;
@@ -84,6 +86,8 @@ export interface Invalidacion_Documento {
   tipoDocumento: string | null;
   numDocumento: string | null;
   nombre: string;
+  correo:string;
+  telefono:string
 }
 
 export interface Invalidacion_Motivo {
