@@ -36,6 +36,7 @@ export const generate_invalidation = (
     document,
     customer,
     sale,
+    codeGeneration,
     ambiente = "00",
   } = payload;
 
@@ -62,7 +63,7 @@ export const generate_invalidation = (
       },
       documento: {
         tipoDte: tipoDte,
-        codigoGeneracion: sale.codigoGeneracion,
+        codigoGeneracion:codeGeneration,
         codigoGeneracionR: convertToNull(sale.codigoGeneracionR),
         selloRecibido: sale.selloRecibido,
         numeroControl: sale.numeroControl,
