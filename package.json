@@ -10,6 +10,7 @@
     "clean": "rimraf dist",
     "prepublishOnly":"npm run build",
     "build": "tsc",
+    "prepare":"npm run build",
     "version:bump": "npm version patch",
     "release": "npm run clean && npm run version:bump && npm run build && git add . && git commit -m \"Release v$(node -p -e \"require('./package.json').version\")\" && git push"
   },
