@@ -42,6 +42,8 @@ export class InvalidationPayload {
     tipoDocumento: string;
     numDocumento: string;
     name: string;
+    correo: string;
+    telefono: string;
   };
   sale: {
     codigoGeneracion: string;
@@ -84,6 +86,8 @@ export interface Invalidacion_Documento {
   tipoDocumento: string | null;
   numDocumento: string | null;
   nombre: string;
+  correo: string;
+  telefono: string;
 }
 
 export interface Invalidacion_Motivo {
