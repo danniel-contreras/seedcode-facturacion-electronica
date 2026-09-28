@@ -36,18 +36,16 @@ export const generate_emisor = (
     nombreComercial: transmitter.nombreComercial,
     codActividad: transmitter.codActividad,
     descActividad: transmitter.descActividad,
-    tipoEstablecimiento: tipoEstablecimiento,
     direccion: {
       departamento: transmitter.direccion.departamento,
       municipio: transmitter.direccion.municipio,
+      distrito: transmitter.direccion.distrito,
       complemento: transmitter.direccion.complemento,
     },
     telefono: transmitter.telefono,
     correo: transmitter.correo,
     codEstable: codEstable,
-    codEstableMH: convertToNull(codEstableMH),
     codPuntoVenta: codPuntoVenta,
-    codPuntoVentaMH: convertToNull(codPuntoVentaMH),
   };
 };
 
@@ -256,6 +254,7 @@ export const generate_receptor = (value: Customer) => {
     direccion: {
       departamento: value!.direccion?.departamento,
       municipio: value!.direccion?.municipio,
+      distrito: value!.direccion?.distrito,
       complemento: value!.direccion?.complemento,
     },
     telefono: convertToNull(value!.telefono),

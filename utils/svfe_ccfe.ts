@@ -109,9 +109,9 @@ export const generate_credito_fiscal = (
     passwordPri: transmitter.clavePrivada,
     dteJson: {
       identificacion: {
-        version: 3,
+        version: 4,
         codigoGeneracion: codigoGeneracion ?? generate_uuid().toUpperCase(),
-        ambiente: ambiente,
+        ambiente: ambiente as "00" | "01",
         tipoDte: "03",
         numeroControl: numeroControl ?? generate_control(
           "03",
@@ -180,9 +180,8 @@ export const generate_credito_fiscal = (
           typeSale === "Gravada"
             ? Number($totalGravada.toFixed(2))
             : Number($totalNoSujOrEx.toFixed(2)),
-        ivaRete1: Number(retencion.toFixed(2)),
-        reteRenta: Number(rete),
-        ivaPerci1: 0,
+        ivaRete: Number(retencion.toFixed(2)),
+        ivaPerci: 0,
         montoTotalOperacion:
           typeSale === "Gravada"
             ? Number(($totalGravada + totalIva).toFixed(2))
@@ -212,8 +211,8 @@ export const generate_credito_fiscal = (
             })
             : null,
         numPagoElectronico: null,
+        observaciones: null,
       },
-      extension: null,
       apendice: null,
     },
   };
@@ -324,7 +323,7 @@ export const process_svccfe = async (
     const payload = {
       ambiente: ambiente,
       idEnvio: 1,
-      version: 3,
+      version: 4,
       tipoDte: "03",
       documento: firma.data.body,
     };

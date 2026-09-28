@@ -49,6 +49,7 @@ export interface ICheckPayload {
 export interface IAddress {
   departamento: string;
   municipio: string;
+  distrito: string;
   complemento: string;
 }
 

@@ -81,9 +81,9 @@ export const generate_factura = (
     passwordPri: transmitter.clavePrivada,
     dteJson: {
       identificacion: {
-        version: 1,
+        version: 2,
         codigoGeneracion: generate_uuid().toUpperCase(),
-        ambiente: ambiente,
+        ambiente: ambiente as "00" | "01",
         tipoDte: "01",
         numeroControl: generate_control(
           "01",
@@ -130,8 +130,7 @@ export const generate_factura = (
         totalDescu: Number(calDiscount(products).toFixed(2)),
         tributos: null,
         subTotal: Number(calc_gravada(products).toFixed(2)),
-        ivaRete1: Number(ivaRete1.toFixed(2)),
-        reteRenta: 0,
+        ivaRete: Number(ivaRete1.toFixed(2)),
         totalIva: Number(total_iva(products).toFixed(2)),
         montoTotalOperacion: Number(calc_gravada(products).toFixed(2)),
         totalNoGravado: Number(calc_no_grav(products).toFixed(2)),
@@ -157,8 +156,8 @@ export const generate_factura = (
         condicionOperacion: condition,
         pagos: tipo_pago,
         numPagoElectronico: null,
+        observaciones: null,
       },
-      extension: null,
       apendice: null,
     },
   };
@@ -238,7 +237,7 @@ export const process_svfe = async (
     const payload = {
       ambiente: ambiente,
       idEnvio: 1,
-      version: 1,
+      version: 2,
       tipoDte: "01",
       documento: firma.data.body,
     };

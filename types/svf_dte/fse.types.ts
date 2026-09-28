@@ -1,28 +1,39 @@
 import { ResponseMHSuccess } from "./global";
-import {
-  FC_ApendiceItems,
-  FC_Identificacion,
-  FC_PagosItems,
-} from "./fc.types";
-export interface FSE_Identificacion extends FC_Identificacion { }
+import { FC_ApendiceItems, FC_PagosItems } from "./fc.types";
+
+/** FSE conserva su propio schema y no comparte la versión de FE-F. */
+export interface FSE_Identificacion {
+  version: number;
+  ambiente: string;
+  tipoDte: string;
+  numeroControl: string;
+  codigoGeneracion: string;
+  tipoModelo: number;
+  tipoOperacion: number;
+  tipoContingencia: number | null;
+  motivoContin: string | null;
+  fecEmi: string;
+  horEmi: string;
+  tipoMoneda: string;
+}
 
 export interface FSE_Emisor {
-  nit: string,
-  nrc: string,
-  nombre: string,
-  codActividad: string,
-  descActividad: string,
+  nit: string;
+  nrc: string;
+  nombre: string;
+  codActividad: string;
+  descActividad: string;
   direccion: {
-    departamento: string,
-    municipio: string,
-    complemento: string
-  },
-  telefono: string,
-  codEstable: string | null,
-  codEstableMH: string | null,
-  codPuntoVentaMH: string | null,
-  codPuntoVenta: string | null
-  correo: string
+    departamento: string;
+    municipio: string;
+    complemento: string;
+  };
+  telefono: string;
+  codEstable: string | null;
+  codEstableMH: string | null;
+  codPuntoVentaMH: string | null;
+  codPuntoVenta: string | null;
+  correo: string;
 }
 
 export interface FSE_Sujeto_Excluido {
@@ -66,7 +77,7 @@ export interface FSE_Resumen {
   observaciones: string | null;
 }
 
-export interface FSE_Apendice extends FC_ApendiceItems { }
+export interface FSE_Apendice extends FC_ApendiceItems {}
 
 export interface FSVE_FSE {
   identificacion: FSE_Identificacion;
@@ -103,38 +114,38 @@ export interface FSE_Invalidacion_Documento {
 }
 
 export interface FSE_Invalidacion_Motivo {
-  tipoAnulacion: number
-  motivoAnulacion: string | null
-  nombreResponsable: string
-  tipDocResponsable: string
-  numDocResponsable: string
-  nombreSolicita: string
-  tipDocSolicita: string
-  numDocSolicita: string
+  tipoAnulacion: number;
+  motivoAnulacion: string | null;
+  nombreResponsable: string;
+  tipDocResponsable: string;
+  numDocResponsable: string;
+  nombreSolicita: string;
+  tipDocSolicita: string;
+  numDocSolicita: string;
 }
 
 export interface FSE_Invalidacion {
-  nit: string,
-  passwordPri: string,
+  nit: string;
+  passwordPri: string;
   dteJson: {
     identificacion: {
-      version: 2,
-      ambiente: "00" | "01",
-      codigoGeneracion: string,
-      fecAnula: string,
-      horAnula: string
-    },
+      version: 2;
+      ambiente: "00" | "01";
+      codigoGeneracion: string;
+      fecAnula: string;
+      horAnula: string;
+    };
     emisor: {
-      nit: string,
-      nombre: string,
-      tipoEstablecimiento: string,
-      telefono: string,
-      correo: string,
-      codEstable: string,
-      codPuntoVenta: string,
-      nomEstablecimiento: string
-    },
-    documento: FSE_Invalidacion_Documento,
-    motivo: FSE_Invalidacion_Motivo
-  }
+      nit: string;
+      nombre: string;
+      tipoEstablecimiento: string;
+      telefono: string;
+      correo: string;
+      codEstable: string;
+      codPuntoVenta: string;
+      nomEstablecimiento: string;
+    };
+    documento: FSE_Invalidacion_Documento;
+    motivo: FSE_Invalidacion_Motivo;
+  };
 }
