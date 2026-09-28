@@ -69,8 +69,10 @@ export const generate_factura = (
   tipo_pago: FC_PagosItems[],
   ivaRete1 = 0,
   ambiente = "00",
+  numeroControl: string,
+  codigoGeneracion: string,
   fecEmi?: string,
-  horEmi?: string
+  horEmi?: string,
 ): SVFE_FC_SEND => {
   const fechaHora =
     fecEmi && horEmi ? { fecEmi, horEmi } : getElSalvadorDateTime();
@@ -82,15 +84,10 @@ export const generate_factura = (
     dteJson: {
       identificacion: {
         version: 2,
-        codigoGeneracion: generate_uuid().toUpperCase(),
+        codigoGeneracion: codigoGeneracion,
         ambiente: ambiente as "00" | "01",
         tipoDte: "01",
-        numeroControl: generate_control(
-          "01",
-          codEstable!,
-          codPuntoVenta!,
-          formatearNumero(nextCorrelative)
-        ),
+        numeroControl: numeroControl,
         tipoModelo: 1,
         tipoOperacion: 1,
         tipoContingencia: null,
@@ -106,7 +103,7 @@ export const generate_factura = (
           codPuntoVenta,
           codEstableMH,
           codPuntoVentaMH,
-          tipoEstablecimiento
+          tipoEstablecimiento,
         ),
       },
       receptor: { ...generate_receptor(customer) },
@@ -124,8 +121,8 @@ export const generate_factura = (
         porcentajeDescuento: Number(
           calcularDescuento(
             total_without_discount(products),
-            total(products)
-          ).porcentajeDescuento.toFixed(2)
+            total(products),
+          ).porcentajeDescuento.toFixed(2),
         ),
         totalDescu: Number(calDiscount(products).toFixed(2)),
         tributos: null,
@@ -141,7 +138,7 @@ export const generate_factura = (
             calc_no_suj(products) +
             calc_gravada(products) -
             ivaRete1
-          ).toFixed(2)
+          ).toFixed(2),
         ),
         totalLetras: convertCurrencyFormat(
           (
@@ -150,7 +147,7 @@ export const generate_factura = (
             calc_no_suj(products) +
             calc_gravada(products) -
             ivaRete1
-          ).toFixed(2)
+          ).toFixed(2),
         ),
         saldoFavor: 0,
         condicionOperacion: condition,
@@ -206,8 +203,10 @@ export const process_svfe = async (
   cancelToken: CancelTokenSource,
   firmador_url: string,
   token: string,
+  numeroControl: string,
+  codigoGeneracion: string,
   fecEmi?: string,
-  horEmi?: string
+  horEmi?: string,
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_FC_Firmado;
@@ -227,8 +226,10 @@ export const process_svfe = async (
     tipo_pago,
     ivaRete1,
     ambiente,
+    numeroControl,
+    codigoGeneracion,
     fecEmi,
-    horEmi
+    horEmi,
   );
 
   const firma = await firmar_documento(factura, firmador_url, cancelToken);
@@ -248,7 +249,7 @@ export const process_svfe = async (
         ambiente as "00" | "01",
         token,
         cancelToken,
-        transmitter.nit
+        transmitter.nit,
       );
 
       if (response.estado === "RECHAZADO") {
