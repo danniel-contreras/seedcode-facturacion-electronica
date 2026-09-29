@@ -349,7 +349,8 @@ export const process_svccfe = async (
           firmado: {
             ...credito_fiscal.dteJson,
             respuestaMH: response,
-            firma: firma.data.body,
+            firmaElectronica: firma.data.body,
+            selloRecepcion: response.selloRecibido,
           },
           credito_fiscal,
         };

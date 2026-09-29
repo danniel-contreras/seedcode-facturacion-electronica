@@ -90,7 +90,8 @@ export interface FSVE_FSE {
 
 export interface SVFE_FSE_Firmado extends FSVE_FSE {
   respuestaMH: ResponseMHSuccess;
-  firma: string;
+  firmaElectronica: string;
+  selloRecepcion: string | null;
 }
 
 export interface SVFE_FSE_SEND {

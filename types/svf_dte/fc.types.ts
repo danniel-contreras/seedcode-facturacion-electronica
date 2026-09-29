@@ -156,7 +156,8 @@ export interface SVFE_FC {
 }
 export interface SVFE_FC_Firmado extends SVFE_FC {
   respuestaMH: ResponseMHSuccess;
-  firma: string;
+  firmaElectronica: string;
+  selloRecepcion: string | null;
 }
 export interface SVFE_FC_SEND {
   nit: string;

@@ -58,7 +58,8 @@ export interface SVFE_InvalidacionCredito_SEND {
 
 export interface SVFE_Invalidacion_Firmado extends SVFE_Invalidacion {
   respuestaMH: ResponseMHSuccess;
-  firma: string;
+  firmaElectronica: string;
+  selloRecepcion: string | null;
 }
 
 export interface IInvalidationToMH {

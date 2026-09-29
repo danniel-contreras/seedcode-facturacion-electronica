@@ -51,7 +51,8 @@ export interface SVFE_ND {
 
 export interface SVFE_ND_Firmado extends SVFE_ND {
     respuestaMH: ResponseMHSuccess,
-    firma: string
+    firmaElectronica: string,
+    selloRecepcion: string | null
 }
 
 export interface SVFE_ND_SEND {

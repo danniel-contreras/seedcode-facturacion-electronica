@@ -264,7 +264,8 @@ export const process_svfe = async (
           firmado: {
             ...factura.dteJson,
             respuestaMH: response,
-            firma: firma.data.body,
+            firmaElectronica: firma.data.body,
+            selloRecepcion: response.selloRecibido,
           },
           factura,
         };

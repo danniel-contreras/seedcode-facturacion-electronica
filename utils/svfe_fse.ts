@@ -249,7 +249,8 @@ export const process_svfse = async (
           firmado: {
             ...sujeto_excluido_gen.dteJson,
             respuestaMH: response,
-            firma: firma.data.body,
+            firmaElectronica: firma.data.body,
+            selloRecepcion: response.selloRecibido,
           },
           sujeto_excluido: sujeto_excluido_gen,
         };
