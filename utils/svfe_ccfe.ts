@@ -56,8 +56,8 @@ import { generate_emisor, make_cuerpo_documento_fiscal } from "./utils";
  */
 
 export const generate_credito_fiscal = (
-  numeroControl: string | null,
-  codigoGeneracion: string | null,
+  numeroControl: string,
+  codigoGeneracion: string,
   transmitter: ITransmitter,
   codEstable: string,
   codPuntoVenta: string,
@@ -76,13 +76,17 @@ export const generate_credito_fiscal = (
   includeIva: boolean = true,
   typeSale: string,
   discountPercentage: number,
-
+  fecEmi?: string,
+  horEmi?: string,
 ): SVFE_CF_SEND => {
+  const fechaHora =
+    fecEmi && horEmi ? { fecEmi, horEmi } : getElSalvadorDateTime();
+
   //MONTO SIN DESCUENTO
   const totalGravada = products_carts
     .map((cp) => Number(cp.quantity) * Number(cp.price))
     .reduce((a, b) => a + b, 0);
-  const noGravado = products_carts.reduce((a, b) => a + b.no_gravado, 0)
+  const noGravado = products_carts.reduce((a, b) => a + b.no_gravado, 0);
 
   //MONTO SIN IVA
   const gravadaWithoutIva = totalGravada / 1.13;
@@ -91,10 +95,10 @@ export const generate_credito_fiscal = (
   const $totalDiscount =
     typeSale === "Gravada"
       ? (gravadaWithoutIva *
-        (isNaN(discountPercentage) ? 0 : discountPercentage)) /
-      100
+          (isNaN(discountPercentage) ? 0 : discountPercentage)) /
+        100
       : (totalGravada * (isNaN(discountPercentage) ? 0 : discountPercentage)) /
-      100;
+        100;
 
   const $totalGravada =
     gravadaWithoutIva - (isNaN($totalDiscount) ? 0 : $totalDiscount);
@@ -110,21 +114,16 @@ export const generate_credito_fiscal = (
     dteJson: {
       identificacion: {
         version: 4,
-        codigoGeneracion: codigoGeneracion ?? generate_uuid().toUpperCase(),
+        codigoGeneracion: codigoGeneracion,
         ambiente: ambiente as "00" | "01",
         tipoDte: "03",
-        numeroControl: numeroControl ?? generate_control(
-          "03",
-          codEstable,
-          codPuntoVenta,
-          formatearNumero(nextCorrelative)
-        ),
+        numeroControl: numeroControl,
         tipoModelo: 1,
         tipoOperacion: 1,
         tipoContingencia: null,
         motivoContin: null,
         tipoMoneda: "USD",
-        ...getElSalvadorDateTime(),
+        ...fechaHora,
       },
       documentoRelacionado: null,
       emisor: {
@@ -134,7 +133,7 @@ export const generate_credito_fiscal = (
           codPuntoVenta,
           codEstableMH,
           codPuntoVentaMH,
-          tipoEstablecimiento
+          tipoEstablecimiento,
         ),
       },
       receptor,
@@ -144,7 +143,7 @@ export const generate_credito_fiscal = (
         includeIva,
         "Gravada",
         0,
-        products_carts
+        products_carts,
       ),
       resumen: {
         totalNoSuj: ["NoSujeta"].includes(typeSale!)
@@ -165,17 +164,17 @@ export const generate_credito_fiscal = (
         descuGravada: 0,
         porcentajeDescuento: isNaN(discountPercentage) ? 0 : discountPercentage,
         totalDescu: Number(
-          (isNaN($totalDiscount) ? 0 : $totalDiscount).toFixed(2)
+          (isNaN($totalDiscount) ? 0 : $totalDiscount).toFixed(2),
         ),
         tributos: ["NoSujeta", "Exenta"].includes(typeSale!)
           ? null
           : [
-            {
-              codigo: tributo!.codigo,
-              descripcion: tributo!.valores,
-              valor: Number(totalIva.toFixed(2)),
-            },
-          ],
+              {
+                codigo: tributo!.codigo,
+                descripcion: tributo!.valores,
+                valor: Number(totalIva.toFixed(2)),
+              },
+            ],
         subTotal:
           typeSale === "Gravada"
             ? Number($totalGravada.toFixed(2))
@@ -189,26 +188,28 @@ export const generate_credito_fiscal = (
         totalNoGravado: Number(noGravado.toFixed(2)),
         totalPagar:
           typeSale === "Gravada"
-            ? Number(($totalGravada - retencion + totalIva + noGravado).toFixed(2))
+            ? Number(
+                ($totalGravada - retencion + totalIva + noGravado).toFixed(2),
+              )
             : Number($totalNoSujOrEx.toFixed(2)),
         totalLetras: convertCurrencyFormat(
           typeSale === "Gravada"
             ? ($totalGravada - retencion + totalIva + noGravado).toFixed(2)
-            : $totalNoSujOrEx.toFixed(2)
+            : $totalNoSujOrEx.toFixed(2),
         ),
         saldoFavor: 0,
         condicionOperacion: condition,
         pagos:
           $totalGravada > 0 || $totalNoSujOrEx > 0
             ? tipo_pago.map((tp) => {
-              return {
-                codigo: tp.codigo,
-                plazo: tp.plazo,
-                periodo: tp.periodo,
-                montoPago: tp.montoPago,
-                referencia: "",
-              };
-            })
+                return {
+                  codigo: tp.codigo,
+                  plazo: tp.plazo,
+                  periodo: tp.periodo,
+                  montoPago: tp.montoPago,
+                  referencia: "",
+                };
+              })
             : null,
         numPagoElectronico: null,
         observaciones: null,
@@ -282,8 +283,10 @@ export const process_svccfe = async (
   cancelToken: CancelTokenSource,
   firmador_url: string,
   token: string,
-  numeroControl: string | null,
-  codigoGeneracion: string | null
+  numeroControl: string,
+  codigoGeneracion: string,
+  fecEmi?: string,
+  horEmi?: string,
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_CF_Firmado;
@@ -309,14 +312,15 @@ export const process_svccfe = async (
     rete,
     includeIva,
     "Gravada",
-    0
-
+    0,
+    fecEmi,
+    horEmi,
   );
 
   const firma = await firmar_documento(
     credito_fiscal,
     firmador_url,
-    cancelToken
+    cancelToken,
   );
 
   if (firma.data.body) {
