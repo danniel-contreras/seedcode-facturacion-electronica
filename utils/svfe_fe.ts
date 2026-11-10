@@ -77,7 +77,9 @@ export const generate_factura = (
   ambiente = "00",
   fecEmi?: string,
   horEmi?: string,
-  dteVersion?: number
+  dteVersion?: number,
+  numeroControl?: string,
+  codigoGeneracion?: string
 ): SVFE_FC_SEND => {
   const schemaVersion = dteVersion ?? get_dte_normative();
 
@@ -107,15 +109,17 @@ export const generate_factura = (
     dteJson: {
       identificacion: {
         version: dte_document_version("01", schemaVersion),
-        codigoGeneracion: generate_uuid().toUpperCase(),
+        codigoGeneracion: codigoGeneracion ?? generate_uuid().toUpperCase(),
         ambiente: ambiente,
         tipoDte: "01",
-        numeroControl: generate_control(
-          "01",
-          codEstable!,
-          codPuntoVenta!,
-          formatearNumero(nextCorrelative)
-        ),
+        numeroControl:
+          numeroControl ??
+          generate_control(
+            "01",
+            codEstable!,
+            codPuntoVenta!,
+            formatearNumero(nextCorrelative)
+          ),
         tipoModelo: 1,
         tipoOperacion: 1,
         tipoContingencia: null,
@@ -231,7 +235,9 @@ export const process_svfe = async (
   firmador_url: string,
   token: string,
   fecEmi?: string,
-  horEmi?: string
+  horEmi?: string,
+  numeroControl?: string,
+  codigoGeneracion?: string
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_FC_Firmado;
@@ -252,7 +258,10 @@ export const process_svfe = async (
     ivaRete1,
     ambiente,
     fecEmi,
-    horEmi
+    horEmi,
+    undefined,
+    numeroControl,
+    codigoGeneracion
   );
 
   const firma = await firmar_documento(factura, firmador_url, cancelToken);
