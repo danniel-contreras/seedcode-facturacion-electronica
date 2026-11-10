@@ -248,7 +248,7 @@ export const process_svfse = async (
     const payload = {
       ambiente: ambiente,
       idEnvio: 1,
-      version: 1,
+      version: sujeto_excluido_gen.dteJson.identificacion.version,
       tipoDte: "14",
       documento: firma.data.body,
     };

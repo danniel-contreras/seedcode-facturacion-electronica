@@ -351,7 +351,7 @@ export const process_svccfe = async (
     const payload = {
       ambiente: ambiente,
       idEnvio: 1,
-      version: 3,
+      version: credito_fiscal.dteJson.identificacion.version,
       tipoDte: "03",
       documento: firma.data.body,
     };

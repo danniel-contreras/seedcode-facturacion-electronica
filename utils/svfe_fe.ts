@@ -270,7 +270,7 @@ export const process_svfe = async (
     const payload = {
       ambiente: ambiente,
       idEnvio: 1,
-      version: 1,
+      version: factura.dteJson.identificacion.version,
       tipoDte: "01",
       documento: firma.data.body,
     };
