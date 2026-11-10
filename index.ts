@@ -52,6 +52,14 @@ export {
 export { generate_uuid } from "./utils/plugins/uuid";
 
 export {
+  get_dte_normative,
+  set_dte_normative,
+  dte_document_version,
+  format_distrito,
+  address_for,
+} from "./utils/version";
+
+export {
   calcularDescuento,
   calDiscount,
   convertCurrencyFormat,

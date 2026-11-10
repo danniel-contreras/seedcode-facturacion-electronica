@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { get_dte_normative } from "./version";
 import {
   InvalidationPayload,
   SVFE_Invalidacion,
@@ -26,6 +27,8 @@ import { send_invalidation_to_mh } from "./services/invalidation.service";
 export const generate_invalidation = (
   payload: InvalidationPayload
 ): SVFE_Invalidacion => {
+  const schemaVersion = get_dte_normative();
+
   const {
     transmitter,
     codEstable,
@@ -39,27 +42,56 @@ export const generate_invalidation = (
     ambiente = "00",
   } = payload;
 
+  // La normativa 2.0 cambia la estructura del evento (v2 vs v3): el tipo
+  // histórico solo describe la v2, por eso se tipa aquí como la unión.
   return {
     nit: transmitter.nit,
     passwordPri: transmitter.clavePrivada,
-    dteJson: {
-      identificacion: {
-        version: 2,
-        ambiente: ambiente,
-        codigoGeneracion: sale.codigoGeneracion,
-        fecAnula: getElSalvadorDateTime().fecEmi,
-        horAnula: getElSalvadorDateTime().horEmi,
-      },
-      emisor: {
-        nit: transmitter.nit,
-        nombre: transmitter.nombre,
-        tipoEstablecimiento: tipoEstablecimiento,
-        telefono: transmitter.telefono,
-        correo: transmitter.correo,
-        codEstable: codEstable,
-        codPuntoVenta: codPuntoVenta,
-        nomEstablecimiento: nombreEstablecimiento,
-      },
+    dteJson: ({
+      identificacion:
+        schemaVersion >= 2
+          ? {
+              // Normativa 2.0: evento de invalidación v3.
+              version: 3,
+              ambiente: ambiente,
+              codigoGeneracion: sale.codigoGeneracion,
+              fecEmi: getElSalvadorDateTime().fecEmi,
+              horEmi: getElSalvadorDateTime().horEmi,
+              fusion: null,
+            }
+          : {
+              version: 2,
+              ambiente: ambiente,
+              codigoGeneracion: sale.codigoGeneracion,
+              fecAnula: getElSalvadorDateTime().fecEmi,
+              horAnula: getElSalvadorDateTime().horEmi,
+            },
+      emisor:
+        schemaVersion >= 2
+          ? {
+              nit: transmitter.nit,
+              nombre: transmitter.nombre,
+              codEstableMH: convertToNull(
+                (payload as any).codEstableMH ?? codEstable
+              ),
+              codEstable: codEstable,
+              codPuntoVentaMH: convertToNull(
+                (payload as any).codPuntoVentaMH ?? codPuntoVenta
+              ),
+              codPuntoVenta: codPuntoVenta,
+              telefono: transmitter.telefono,
+              correo: transmitter.correo,
+            }
+          : {
+              nit: transmitter.nit,
+              nombre: transmitter.nombre,
+              tipoEstablecimiento: tipoEstablecimiento,
+              telefono: transmitter.telefono,
+              correo: transmitter.correo,
+              codEstable: codEstable,
+              codPuntoVenta: codPuntoVenta,
+              nomEstablecimiento: nombreEstablecimiento,
+            },
       documento: {
         tipoDte: tipoDte,
         codigoGeneracion: sale.codigoGeneracion,
@@ -67,7 +99,8 @@ export const generate_invalidation = (
         selloRecibido: sale.selloRecibido,
         numeroControl: sale.numeroControl,
         fecEmi: sale.fecEmi,
-        montoIva: Number(sale.montoIva),
+        // La normativa 2.0 eliminó `montoIva` del evento de invalidación.
+        ...(schemaVersion >= 2 ? {} : { montoIva: Number(sale.montoIva) }),
         tipoDocumento: convertToNull(customer.tipoDocumento),
         numDocumento: convertToNull(customer.numDocumento),
         nombre: customer.name,
@@ -84,7 +117,7 @@ export const generate_invalidation = (
         tipDocSolicita: document.tipDocSolicita,
         numDocSolicita: document.numDocSolicita,
       },
-    },
+    } as unknown) as SVFE_Invalidacion["dteJson"],
   };
 };
 

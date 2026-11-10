@@ -15,7 +15,8 @@ export interface FSE_Emisor {
   direccion: {
     departamento: string,
     municipio: string,
-    complemento: string
+    complemento: string,
+    distrito?: string
   },
   telefono: string,
   codEstable: string | null,
@@ -57,7 +58,8 @@ export interface FSE_Resumen {
   descu: number;
   totalDescu: number;
   subTotal: number;
-  ivaRete1: number;
+  /** Solo en la normativa anterior. */
+  ivaRete1?: number;
   reteRenta: number;
   totalPagar: number;
   totalLetras: string;
@@ -71,7 +73,10 @@ export interface FSE_Apendice extends FC_ApendiceItems { }
 export interface FSVE_FSE {
   identificacion: FSE_Identificacion;
   emisor: FSE_Emisor;
-  sujetoExcluido: FSE_Sujeto_Excluido;
+  /** Normativa anterior. */
+  sujetoExcluido?: FSE_Sujeto_Excluido;
+  /** Normativa 2.0: reemplaza a `sujetoExcluido`. */
+  receptor?: FSE_Sujeto_Excluido;
   cuerpoDocumento: FSE_Cuerpo_Documento[];
   resumen: FSE_Resumen;
   apendice: FSE_Apendice[] | null;

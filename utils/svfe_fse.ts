@@ -1,4 +1,4 @@
-import { CancelTokenSource } from "axios";
+import { CancelTokenSourceLike } from "./cancel";
 import { FSE_Invalidacion_Documento, FSE_Invalidacion_Motivo, SVFE_FSE_Firmado, SVFE_FSE_SEND } from "../types/svf_dte/fse.types";
 import {
   Customer,
@@ -16,6 +16,11 @@ import {
 } from "./settings";
 import { convertToNull, generate_emisor, generate_emisor_fse } from "./utils";
 import { firmar_documento, send_to_mh } from "./services/svfe.service";
+import {
+  address_for,
+  dte_document_version,
+  get_dte_normative,
+} from "./version";
 
 /**
  * Description
@@ -48,8 +53,10 @@ export const generate_excluded_subject = (
   sujetoExcluido: Customer,
   ambiente: "00" | "01",
   products: ICartProductFSE[],
-  observaciones: string
+  observaciones: string,
+  dteVersion?: number
 ): SVFE_FSE_SEND => {
+  const schemaVersion = dteVersion ?? get_dte_normative();
   const subTotal = products.reduce((total, product) => {
     return total + product.precioUni * product.cantidad;
   }, 0);
@@ -64,13 +71,27 @@ export const generate_excluded_subject = (
 
   const total = subTotal - reteRenta;
 
+  const emisor_fse = generate_emisor_fse(
+    transmitter,
+    codEstable,
+    codPuntoVenta,
+    codEstableMH,
+    codPuntoVentaMH
+  );
+
+  if (schemaVersion >= 2) {
+    // La normativa 2.0 ya no define los códigos MH en el emisor del FSE.
+    delete (emisor_fse as any).codEstableMH;
+    delete (emisor_fse as any).codPuntoVentaMH;
+  }
+
   return {
     nit: transmitter.nit,
     passwordPri: transmitter.clavePrivada,
     activo: true,
     dteJson: {
       identificacion: {
-        version: 1,
+        version: dte_document_version("14", schemaVersion),
         codigoGeneracion: generate_uuid().toUpperCase(),
         ambiente: ambiente,
         tipoDte: "14",
@@ -88,15 +109,18 @@ export const generate_excluded_subject = (
         ...getElSalvadorDateTime(),
       },
       emisor: {
-        ...generate_emisor_fse(
-          transmitter,
-          codEstable,
-          codPuntoVenta,
-          codEstableMH,
-          codPuntoVentaMH
-        ),
+        ...emisor_fse,
+        direccion: address_for(transmitter.direccion, schemaVersion),
       },
-      sujetoExcluido: generate_subject(sujetoExcluido),
+      // La normativa 2.0 renombró `sujetoExcluido` a `receptor`.
+      ...(schemaVersion >= 2
+        ? {
+            receptor: {
+              ...generate_subject(sujetoExcluido),
+              direccion: address_for(sujetoExcluido.direccion, schemaVersion),
+            },
+          }
+        : { sujetoExcluido: generate_subject(sujetoExcluido) }),
       cuerpoDocumento: products.map((prd, index) => ({
         ...prd,
         numItem: index + 1,
@@ -107,7 +131,8 @@ export const generate_excluded_subject = (
         descu: 0,
         totalDescu: 0,
         subTotal: Number(subTotal.toFixed(2)),
-        ivaRete1: 0,
+        // La normativa 2.0 eliminó `ivaRete1` del resumen del FSE.
+        ...(schemaVersion >= 2 ? {} : { ivaRete1: 0 }),
         reteRenta: Number(reteRenta.toFixed(2)),
         totalPagar: Number(total.toFixed(2)),
         totalLetras: convertCurrencyFormat(total.toFixed(2)),
@@ -173,7 +198,7 @@ export const generate_subject = (customer: Customer) => {
  * @param {"00" | "01"} ambiente
  * @param {ICartProductFSE[]} products
  * @param {string} observaciones
- * @param {CancelTokenSource} cancelToken
+ * @param {CancelTokenSourceLike} cancelToken
  * @param {string} firmador_url
  * @param {string} token
  * @returns {Promise<{ mh: ResponseMHSuccess; firmado: SVFE_FSE_Firmado; sujeto_excluido: SVFE_FSE_SEND; }>}
@@ -191,7 +216,7 @@ export const process_svfse = async (
   ambiente: "00" | "01",
   products: ICartProductFSE[],
   observaciones: string,
-  cancelToken: CancelTokenSource,
+  cancelToken: CancelTokenSourceLike,
   firmador_url: string,
   token: string
 ): Promise<{

@@ -33,6 +33,7 @@ export interface CF_Receptor {
         departamento: string;
         municipio: string;
         complemento: string;
+        distrito?: string;
     };
     telefono: string | null;
     correo: string;
@@ -73,9 +74,13 @@ export interface CF_Resumen {
     totalDescu: number;
     tributos: CF_TributosItems[] | null;
     subTotal: number;
-    ivaPerci1: number;
-    ivaRete1: number;
-    reteRenta: number;
+    /** Normativa 2.0 */
+    ivaPerci?: number;
+    ivaRete?: number;
+    observaciones?: string | null;
+    ivaPerci1?: number;
+    ivaRete1?: number;
+    reteRenta?: number;
     montoTotalOperacion: number;
     totalNoGravado: number;
     totalPagar: number;
@@ -99,7 +104,7 @@ export interface SVFE_CF {
     documentoRelacionado: CF_DocumentoRelacionadoItems[] | null,
     cuerpoDocumento: CF_CuerpoDocumentoItems[],
     resumen: CF_Resumen,
-    extension: FC_Extension[] | null,
+    extension?: FC_Extension[] | null,
     apendice: FC_ApendiceItems[] | null
 }
 

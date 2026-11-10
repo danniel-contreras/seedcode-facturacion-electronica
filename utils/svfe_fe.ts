@@ -1,4 +1,5 @@
-import { AxiosError, CancelTokenSource } from "axios";
+import { CancelTokenSourceLike } from "./cancel";
+import { AxiosError } from "axios";
 import {
   FC_PagosItems,
   SVFE_FC_Firmado,
@@ -33,6 +34,11 @@ import {
   generate_receptor,
   make_cuerpo_documento_factura,
 } from "./utils";
+import {
+  address_for,
+  dte_document_version,
+  get_dte_normative,
+} from "./version";
 
 /**
  * Generates a Factura Electronica Venta object based on the given transmitter
@@ -70,10 +76,29 @@ export const generate_factura = (
   ivaRete1 = 0,
   ambiente = "00",
   fecEmi?: string,
-  horEmi?: string
+  horEmi?: string,
+  dteVersion?: number
 ): SVFE_FC_SEND => {
+  const schemaVersion = dteVersion ?? get_dte_normative();
+
   const fechaHora =
     fecEmi && horEmi ? { fecEmi, horEmi } : getElSalvadorDateTime();
+
+  const emisor = generate_emisor(
+    transmitter,
+    codEstable,
+    codPuntoVenta,
+    codEstableMH,
+    codPuntoVentaMH,
+    tipoEstablecimiento
+  );
+
+  if (schemaVersion >= 2) {
+    // La normativa 2.0 ya no define estos campos en el emisor (esquema v2).
+    delete (emisor as any).tipoEstablecimiento;
+    delete (emisor as any).codEstableMH;
+    delete (emisor as any).codPuntoVentaMH;
+  }
 
   return {
     nit: transmitter.nit,
@@ -81,7 +106,7 @@ export const generate_factura = (
     passwordPri: transmitter.clavePrivada,
     dteJson: {
       identificacion: {
-        version: 1,
+        version: dte_document_version("01", schemaVersion),
         codigoGeneracion: generate_uuid().toUpperCase(),
         ambiente: ambiente,
         tipoDte: "01",
@@ -100,16 +125,13 @@ export const generate_factura = (
       },
       documentoRelacionado: null,
       emisor: {
-        ...generate_emisor(
-          transmitter,
-          codEstable,
-          codPuntoVenta,
-          codEstableMH,
-          codPuntoVentaMH,
-          tipoEstablecimiento
-        ),
+        ...emisor,
+        direccion: address_for(transmitter.direccion, schemaVersion),
       },
-      receptor: { ...generate_receptor(customer) },
+      receptor: {
+        ...generate_receptor(customer),
+        direccion: address_for(customer.direccion, schemaVersion),
+      },
       otrosDocumentos: null,
       ventaTercero: null,
       cuerpoDocumento: make_cuerpo_documento_factura(products),
@@ -130,8 +152,9 @@ export const generate_factura = (
         totalDescu: Number(calDiscount(products).toFixed(2)),
         tributos: null,
         subTotal: Number(calc_gravada(products).toFixed(2)),
-        ivaRete1: Number(ivaRete1.toFixed(2)),
-        reteRenta: 0,
+        ...(schemaVersion >= 2
+          ? { ivaRete: Number(ivaRete1.toFixed(2)), observaciones: null }
+          : { ivaRete1: Number(ivaRete1.toFixed(2)), reteRenta: 0 }),
         totalIva: Number(total_iva(products).toFixed(2)),
         montoTotalOperacion: Number(calc_gravada(products).toFixed(2)),
         totalNoGravado: Number(calc_no_grav(products).toFixed(2)),
@@ -158,7 +181,7 @@ export const generate_factura = (
         pagos: tipo_pago,
         numPagoElectronico: null,
       },
-      extension: null,
+      ...(schemaVersion >= 2 ? {} : { extension: null }),
       apendice: null,
     },
   };
@@ -183,7 +206,7 @@ export const generate_factura = (
  * @param {FC_PagosItems[]} tipo_pago - The type of payment.
  * @param {number} ivaRete1 - The first IVA retention.
  * @param {string} ambiente - The environment.
- * @param {CancelTokenSource} cancelToken - The cancel token.
+ * @param {CancelTokenSourceLike} cancelToken - The cancel token.
  * @param {string} firmador_url - The URL of the firmador service.
  * @param {string} token - The token to use for the MH server.
  * @returns {Promise<{mh: ResponseMHSuccess; firmado: SVFE_FC_Firmado}>} - A
@@ -204,7 +227,7 @@ export const process_svfe = async (
   tipo_pago: FC_PagosItems[],
   ivaRete1 = 0,
   ambiente = "00",
-  cancelToken: CancelTokenSource,
+  cancelToken: CancelTokenSourceLike,
   firmador_url: string,
   token: string,
   fecEmi?: string,

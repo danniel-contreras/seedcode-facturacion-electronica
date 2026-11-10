@@ -50,6 +50,8 @@ export interface IAddress {
   departamento: string;
   municipio: string;
   complemento: string;
+  /** CAT-013. Obligatorio con la normativa 2.0. */
+  distrito?: string;
 }
 
 export interface ITransmitter {

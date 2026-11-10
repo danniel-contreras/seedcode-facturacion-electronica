@@ -1,11 +1,8 @@
+import { CancelTokenSourceLike } from "../cancel";
 import { SVFE_CF_SEND } from "../../types/svf_dte/cf.types";
 import { SVFE_FC_SEND } from "../../types/svf_dte/fc.types";
 import axios, {
-  AxiosError,
-  AxiosResponse,
-  CancelToken,
-  CancelTokenSource,
-} from "axios";
+  AxiosError, AxiosResponse, CancelToken } from "axios";
 import { CHECK_URL, MH_DTE, MH_DTE_TEST } from "../constants";
 import {
   ICheckPayload,
@@ -30,7 +27,7 @@ import { SVFE_FSE_SEND } from "../../types/svf_dte/fse.types";
 export const firmar_documento = (
   data: SVFE_CF_SEND | SVFE_FC_SEND | SVFE_Invalidacion | SVFE_FSE_SEND,
   url: string,
-  cancelToken: CancelTokenSource
+  cancelToken: CancelTokenSourceLike
 ): Promise<AxiosResponse<{ body: string }>> => {
   return axios.post<{ body: string }>(url, data, {
     cancelToken: cancelToken.token,
@@ -44,14 +41,14 @@ export const firmar_documento = (
  * @param {PayloadMH} payload
  * @param {("01" | "00")} ambiente
  * @param {string} token
- * @param {CancelTokenSource} cancelToken
+ * @param {CancelTokenSourceLike} cancelToken
  * @returns {Promise<ResponseMHSuccess>}
  */
 export const send_to_mh = async (
   payload: PayloadMH,
   ambiente: "01" | "00",
   token: string,
-  cancelToken: CancelTokenSource,
+  cancelToken: CancelTokenSourceLike,
   nit: string,
 ): Promise<ResponseMHSuccess> => {
   try {

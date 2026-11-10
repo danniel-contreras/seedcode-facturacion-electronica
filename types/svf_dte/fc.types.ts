@@ -33,7 +33,8 @@ export interface FC_Emisor {
     direccion: {
         departamento: string,
         municipio: string,
-        complemento: string
+        complemento: string,
+        distrito?: string
     },
     telefono: string,
     correo: string,
@@ -53,7 +54,8 @@ export interface FC_Receptor {
     direccion: {
         departamento: string,
         municipio: string,
-        complemento: string
+        complemento: string,
+        distrito?: string
     } | null,
     telefono: string | null,
     correo: string | null
@@ -126,8 +128,11 @@ export interface FC_Resumen {
     totalDescu: number,
     tributos: FC_TributosItems[] | null,
     subTotal: number,
-    ivaRete1: number,
-    reteRenta: number,
+    /** Normativa 2.0 */
+    ivaRete?: number,
+    observaciones?: string | null,
+    ivaRete1?: number,
+    reteRenta?: number,
     montoTotalOperacion: number,
     totalNoGravado: number,
     totalPagar: number,
@@ -163,7 +168,7 @@ export interface SVFE_FC {
     documentoRelacionado: FC_DocumentoRelacionadoItems[] | null,
     cuerpoDocumento: FC_CuerpoDocumentoItems[],
     resumen: FC_Resumen,
-    extension: FC_Extension[] | null,
+    extension?: FC_Extension[] | null,
     apendice: FC_ApendiceItems[] | null
 }
 

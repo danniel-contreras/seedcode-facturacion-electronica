@@ -1,4 +1,4 @@
-import { CancelTokenSource } from "axios";
+import { CancelTokenSourceLike } from "./cancel";
 import {
   CF_PagosItems,
   CF_Receptor,
@@ -27,6 +27,11 @@ import {
   total_without_discount,
 } from "./settings";
 import { generate_emisor, make_cuerpo_documento_fiscal } from "./utils";
+import {
+  address_for,
+  dte_document_version,
+  get_dte_normative,
+} from "./version";
 
 /**
  * Generates a Crédito Fiscal Electrónico object based on the given transmitter
@@ -76,8 +81,9 @@ export const generate_credito_fiscal = (
   includeIva: boolean = true,
   typeSale: string,
   discountPercentage: number,
-
+  dteVersion?: number
 ): SVFE_CF_SEND => {
+  const schemaVersion = dteVersion ?? get_dte_normative();
   //MONTO SIN DESCUENTO
   const totalGravada = products_carts
     .map((cp) => Number(cp.quantity) * Number(cp.price))
@@ -103,13 +109,29 @@ export const generate_credito_fiscal = (
 
   const totalIva = $totalGravada * 0.13;
 
+  const emisor = generate_emisor(
+    transmitter,
+    codEstable,
+    codPuntoVenta,
+    codEstableMH,
+    codPuntoVentaMH,
+    tipoEstablecimiento
+  );
+
+  if (schemaVersion >= 2) {
+    // La normativa 2.0 ya no define estos campos en el emisor (CCF v4).
+    delete (emisor as any).tipoEstablecimiento;
+    delete (emisor as any).codEstableMH;
+    delete (emisor as any).codPuntoVentaMH;
+  }
+
   return {
     nit: transmitter.nit,
     activo: true,
     passwordPri: transmitter.clavePrivada,
     dteJson: {
       identificacion: {
-        version: 3,
+        version: dte_document_version("03", schemaVersion),
         codigoGeneracion: codigoGeneracion ?? generate_uuid().toUpperCase(),
         ambiente: ambiente,
         tipoDte: "03",
@@ -128,16 +150,13 @@ export const generate_credito_fiscal = (
       },
       documentoRelacionado: null,
       emisor: {
-        ...generate_emisor(
-          transmitter,
-          codEstable,
-          codPuntoVenta,
-          codEstableMH,
-          codPuntoVentaMH,
-          tipoEstablecimiento
-        ),
+        ...emisor,
+        direccion: address_for(transmitter.direccion, schemaVersion),
       },
-      receptor,
+      receptor: {
+        ...receptor,
+        direccion: address_for(receptor.direccion, schemaVersion),
+      },
       otrosDocumentos: null,
       ventaTercero: null,
       cuerpoDocumento: make_cuerpo_documento_fiscal(
@@ -180,9 +199,17 @@ export const generate_credito_fiscal = (
           typeSale === "Gravada"
             ? Number($totalGravada.toFixed(2))
             : Number($totalNoSujOrEx.toFixed(2)),
-        ivaRete1: Number(retencion.toFixed(2)),
-        reteRenta: Number(rete),
-        ivaPerci1: 0,
+        ...(schemaVersion >= 2
+          ? {
+              ivaPerci: 0,
+              ivaRete: Number(retencion.toFixed(2)),
+              observaciones: null,
+            }
+          : {
+              ivaRete1: Number(retencion.toFixed(2)),
+              reteRenta: Number(rete),
+              ivaPerci1: 0,
+            }),
         montoTotalOperacion:
           typeSale === "Gravada"
             ? Number(($totalGravada + totalIva).toFixed(2))
@@ -213,7 +240,7 @@ export const generate_credito_fiscal = (
             : null,
         numPagoElectronico: null,
       },
-      extension: null,
+      ...(schemaVersion >= 2 ? {} : { extension: null }),
       apendice: null,
     },
   };
@@ -254,7 +281,7 @@ export const reteRenta = (rete: number, total: number) => {
  * @param {number} [rete=0] - The retention rate.
  * @param {boolean} [includeIva=false] - Whether to include the IVA in the
  *  calculation.
- * @param {CancelTokenSource} cancelToken - The cancel token.
+ * @param {CancelTokenSourceLike} cancelToken - The cancel token.
  * @param {string} firmador_url - The URL of the firmador service.
  * @param {string} token - The token to use for the MH server.
  * @param {string|null} [numeroControl=null] - The numeroControl to use for the MH server.
@@ -280,7 +307,7 @@ export const process_svccfe = async (
   tributo: TipoTributo,
   rete: number = 0,
   includeIva: boolean = false,
-  cancelToken: CancelTokenSource,
+  cancelToken: CancelTokenSourceLike,
   firmador_url: string,
   token: string,
   numeroControl: string | null,
