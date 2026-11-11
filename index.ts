@@ -117,6 +117,7 @@ export {
   generate_excluded_subject,
   generate_subject,
   process_svfse,
+  type FseOverrides,
 } from "./utils/svfe_fse";
 
 export { type ICartProductFSE } from "./types/svf_dte/global";

@@ -25,9 +25,14 @@ import {
   address_for,
   dte_document_version,
   get_dte_normative,
-} from "./version";
+} from "./version";/** Numero de control y codigo de generacion ya registrados por la API. */
+export interface FseOverrides {
+  numeroControl?: string;
+  codigoGeneracion?: string;
+}
 
 /**
+
  * Description
  *
  * @function
@@ -59,7 +64,8 @@ export const generate_excluded_subject = (
   ambiente: "00" | "01",
   products: ICartProductFSE[],
   observaciones: string,
-  dteVersion?: number
+  dteVersion?: number,
+  overrides?: FseOverrides
 ): SVFE_FSE_SEND => {
   const schemaVersion = dteVersion ?? get_dte_normative();
   const subTotal = products.reduce((total, product) => {
@@ -97,15 +103,18 @@ export const generate_excluded_subject = (
     dteJson: {
       identificacion: {
         version: dte_document_version("14", schemaVersion),
-        codigoGeneracion: generate_uuid().toUpperCase(),
+        codigoGeneracion:
+          overrides?.codigoGeneracion ?? generate_uuid().toUpperCase(),
         ambiente: ambiente,
         tipoDte: "14",
-        numeroControl: generate_control(
-          "14",
-          codEstable!,
-          codPuntoVenta!,
-          formatearNumero(Number(nextCorrelative))
-        ),
+        numeroControl:
+          overrides?.numeroControl ??
+          generate_control(
+            "14",
+            codEstable!,
+            codPuntoVenta!,
+            formatearNumero(Number(nextCorrelative))
+          ),
         tipoModelo: 1,
         tipoOperacion: 1,
         tipoContingencia: null,
@@ -225,7 +234,8 @@ export const process_svfse = async (
   observaciones: string,
   cancelToken: CancelTokenSourceLike,
   firmador_url: string,
-  token: string
+  token: string,
+  overrides?: FseOverrides
 ): Promise<{
   mh: ResponseMHSuccess;
   firmado: SVFE_FSE_Firmado;
@@ -242,7 +252,9 @@ export const process_svfse = async (
     sujetoExcluido,
     ambiente,
     products,
-    observaciones
+    observaciones,
+    undefined,
+    overrides
   );
 
   const firma = await firmar_documento(
