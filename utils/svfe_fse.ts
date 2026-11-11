@@ -178,6 +178,8 @@ export const generate_subject = (customer: Customer) => {
     direccion: {
       departamento: customer!.direccion.departamento,
       municipio: customer!.direccion.municipio,
+      distrito: (customer!.direccion as any)?.distrito,
+      nombreDistrito: (customer!.direccion as any)?.nombreDistrito,
       complemento: customer!.direccion.complemento,
     },
     telefono: convertToNull(customer?.telefono),

@@ -269,6 +269,8 @@ export const generate_receptor = (value: Customer) => {
     direccion: {
       departamento: value!.direccion?.departamento,
       municipio: value!.direccion?.municipio,
+      distrito: (value!.direccion as any)?.distrito,
+      nombreDistrito: (value!.direccion as any)?.nombreDistrito,
       complemento: value!.direccion?.complemento,
     },
     telefono: convertToNull(value!.telefono),
