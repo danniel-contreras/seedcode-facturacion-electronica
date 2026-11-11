@@ -14,7 +14,12 @@ import {
   generate_control,
   getElSalvadorDateTime,
 } from "./settings";
-import { convertToNull, generate_emisor, generate_emisor_fse } from "./utils";
+import {
+  clean_num_documento,
+  convertToNull,
+  generate_emisor,
+  generate_emisor_fse,
+} from "./utils";
 import { firmar_documento, send_to_mh } from "./services/svfe.service";
 import {
   address_for,
@@ -166,7 +171,7 @@ export const generate_excluded_subject = (
 export const generate_subject = (customer: Customer) => {
   return {
     tipoDocumento: customer!.tipoDocumento,
-    numDocumento: customer!.numDocumento,
+    numDocumento: clean_num_documento(customer!.numDocumento),
     nombre: customer!.nombre,
     codActividad: convertToNull(customer?.codActividad),
     descActividad: convertToNull(customer?.descActividad),

@@ -155,6 +155,9 @@ export const generate_credito_fiscal = (
       },
       receptor: {
         ...receptor,
+        nit: receptor.nit
+          ? String(receptor.nit).replace(/[\s-]/g, "")
+          : receptor.nit,
         direccion: address_for(receptor.direccion, schemaVersion),
       },
       otrosDocumentos: null,

@@ -6,7 +6,7 @@ import {
   ResponseMHSuccess,
   SendMHFailed,
 } from "../types/svf_dte/global";
-import { agregarGuion, get_iva } from "./settings";
+import { get_iva } from "./settings";
 import * as moment from "moment-timezone";
 
 /**
@@ -222,9 +222,22 @@ export const make_cuerpo_documento_fiscal = (
 const quitIva = (price: number | string) => (Number(price) / 1.13).toFixed(2);
 
 /**
+ * Quita guiones y espacios de un numero de documento. Hacienda espera el NIT
+ * y el DUI solo con digitos, tanto en el esquema v1.2 como en el 2.0.
+ * @param {string | null} value - Numero de documento tal como viene del cliente.
+ * @returns {string | null} El documento sin guiones ni espacios.
+ */
+export const clean_num_documento = <T extends string | null | undefined>(
+  value: T
+): T => {
+  if (value === null || value === undefined || value === "") return value;
+  return String(value).replace(/[\s-]/g, "") as T;
+};
+
+/**
  * Generates the SVFE_FC_Receptor object from a Customer object.
  * - If the Customer.nrc is not zero, sets the tipoDocumento to "36" and numDocumento to Customer.nit.
- * - If the Customer.nrc is zero, sets the tipoDocumento to Customer.tipoDocumento and numDocumento to Customer.numDocumento after adding a dash.
+ * - If the Customer.nrc is zero, sets the tipoDocumento to Customer.tipoDocumento and numDocumento to Customer.numDocumento without dashes.
  * - Sets the nrc to Customer.nrc if it is not zero.
  * - Sets the nombre to Customer.nombre.
  * - Sets the codActividad to Customer.codActividad if it is not zero.
@@ -245,10 +258,10 @@ export const generate_receptor = (value: Customer) => {
           : value!.tipoDocumento,
     numDocumento:
       Number(value!.nrc) !== 0 && value!.nrc
-        ? value!.nit
+        ? clean_num_documento(value!.nit)
         : value!.numDocumento === "0" || value.numDocumento === "N/A"
           ? null
-          : agregarGuion(value!.numDocumento),
+          : clean_num_documento(value!.numDocumento),
     nrc: convertToNull(value!.nrc),
     nombre: value!.nombre,
     codActividad: convertToNull(value!.codActividad),

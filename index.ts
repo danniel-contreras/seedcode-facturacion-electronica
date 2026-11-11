@@ -76,6 +76,7 @@ export {
 } from "./utils/settings";
 
 export {
+  clean_num_documento,
   generate_emisor,
   generate_receptor,
   make_cuerpo_documento_factura,
