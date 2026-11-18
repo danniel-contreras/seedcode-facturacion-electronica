@@ -99,7 +99,8 @@ export const generate_invalidation = (
         selloRecibido: sale.selloRecibido,
         numeroControl: sale.numeroControl,
         fecEmi: sale.fecEmi,
-        // La normativa 2.0 eliminó `montoIva` del evento de invalidación.
+        // El esquema v3 de la normativa 2.0 no define `montoIva`; el MH lo
+        // rechaza como campo no permitido.
         ...(schemaVersion >= 2 ? {} : { montoIva: Number(sale.montoIva) }),
         tipoDocumento: convertToNull(customer.tipoDocumento),
         numDocumento: convertToNull(customer.numDocumento),
@@ -148,7 +149,7 @@ export const process_invalidation = async (
           }, 20000);
 
           const payload = {
-            version: 2,
+            version: 3,
             idEnvio: 1,
             ambiente,
             documento: response.data.body,

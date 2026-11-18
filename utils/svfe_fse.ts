@@ -24,7 +24,6 @@ import { firmar_documento, send_to_mh } from "./services/svfe.service";
 import {
   address_for,
   dte_document_version,
-  get_dte_normative,
 } from "./version";/** Numero de control y codigo de generacion ya registrados por la API. */
 export interface FseOverrides {
   numeroControl?: string;
@@ -67,7 +66,9 @@ export const generate_excluded_subject = (
   dteVersion?: number,
   overrides?: FseOverrides
 ): SVFE_FSE_SEND => {
-  const schemaVersion = dteVersion ?? get_dte_normative();
+  // La normativa 2.0 es la unica; `dteVersion` se acepta pero se ignora.
+  void dteVersion;
+  const schemaVersion = 2;
   const subTotal = products.reduce((total, product) => {
     return total + product.precioUni * product.cantidad;
   }, 0);

@@ -30,7 +30,6 @@ import { generate_emisor, make_cuerpo_documento_fiscal } from "./utils";
 import {
   address_for,
   dte_document_version,
-  get_dte_normative,
 } from "./version";
 
 /**
@@ -83,7 +82,9 @@ export const generate_credito_fiscal = (
   discountPercentage: number,
   dteVersion?: number
 ): SVFE_CF_SEND => {
-  const schemaVersion = dteVersion ?? get_dte_normative();
+  // La normativa 2.0 es la unica; `dteVersion` se acepta pero se ignora.
+  void dteVersion;
+  const schemaVersion = 2;
   //MONTO SIN DESCUENTO
   const totalGravada = products_carts
     .map((cp) => Number(cp.quantity) * Number(cp.price))

@@ -1,28 +1,19 @@
 /**
- * Soporte de la normativa de cumplimiento de DTE versión 2.0 del Ministerio de
- * Hacienda (obligatoria desde el 1 de diciembre de 2026).
+ * Normativa de cumplimiento de DTE versión 2.0 del Ministerio de Hacienda.
+ *
+ * Esta versión de la librería emite únicamente con la normativa 2.0: no existe
+ * un selector ni una rama para la estructura anterior. `set_dte_normative` y
+ * los parámetros `dteVersion`/`version` se conservan por compatibilidad de API,
+ * pero se ignoran.
  *
  * La normativa 2.0 cambia la versión de los esquemas (`identificacion.version`),
  * vuelve obligatorio el distrito (CAT-013) en las direcciones y renombra el
  * bloque del sujeto excluido del FSE de `sujetoExcluido` a `receptor`.
- *
- * El valor por defecto es 2. Para seguir emitiendo con la estructura anterior
- * se puede llamar `set_dte_normative(1)` o pasar `dteVersion` a cada generador.
  */
-let dte_normative: 1 | 2 = 2;
-
-/** Normativa activa con la que se generan los documentos. */
-export const get_dte_normative = (): 1 | 2 => dte_normative;
-
-/** Cambia la normativa activa (1 = anterior, 2 = normativa 2.0). */
-export const set_dte_normative = (version: 1 | 2) => {
-  dte_normative = version;
-};
 
 /**
  * Versión de `identificacion.version` por tipo de DTE según los esquemas de la
- * normativa 2.0: FE v2, CCF v4, NC/ND v4 (aún no generados por la librería) y
- * FSE v2. Con la normativa anterior se mantienen las versiones históricas.
+ * normativa 2.0: FE v2, CCF v4, NC/ND v4 y FSE v2.
  */
 const DTE_VERSIONS_2: Record<string, number> = {
   "01": 2,
@@ -32,15 +23,22 @@ const DTE_VERSIONS_2: Record<string, number> = {
   "14": 2,
 };
 
-export const dte_document_version = (tipoDte: string, version?: number): number => {
-  const normative = version ?? dte_normative;
+/** Normativa activa: siempre 2.0. */
+export const get_dte_normative = (): 2 => 2;
 
-  if (normative >= 2) {
-    return DTE_VERSIONS_2[tipoDte] ?? 1;
-  }
-
-  return tipoDte === "03" ? 3 : 1;
+/**
+ * @deprecated La normativa 2.0 es la única soportada; no tiene efecto.
+ * Se conserva para que los consumidores que la llaman sigan compilando.
+ */
+export const set_dte_normative = (_version: 1 | 2): void => {
+  /* no-op */
 };
+
+/** Versión del esquema del DTE según la normativa 2.0. */
+export const dte_document_version = (
+  tipoDte: string,
+  _version?: number
+): number => DTE_VERSIONS_2[tipoDte] ?? 2;
 
 /**
  * CAT-013: el distrito se guarda con un dígito ("1") y Hacienda lo exige de
@@ -61,27 +59,13 @@ interface Direccion {
   distrito?: string | null;
 }
 
-/**
- * Dirección del DTE. Con la normativa 2.0 incluye `distrito`; con la anterior
- * se omite porque Hacienda rechaza el campo ("Campo distrito no esta
- * permitido").
- */
+/** Dirección del DTE con la normativa 2.0 (siempre incluye `distrito`). */
 export const address_for = (
   direccion: Direccion | null | undefined,
-  version?: number
-) => {
-  const base = {
-    departamento: direccion?.departamento ?? "",
-    municipio: direccion?.municipio ?? "",
-  };
-
-  if ((version ?? dte_normative) >= 2) {
-    return {
-      ...base,
-      distrito: format_distrito(direccion?.distrito),
-      complemento: direccion?.complemento ?? "",
-    };
-  }
-
-  return { ...base, complemento: direccion?.complemento ?? "" };
-};
+  _version?: number
+) => ({
+  departamento: direccion?.departamento ?? "",
+  municipio: direccion?.municipio ?? "",
+  distrito: format_distrito(direccion?.distrito),
+  complemento: direccion?.complemento ?? "",
+});

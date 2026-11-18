@@ -37,7 +37,6 @@ import {
 import {
   address_for,
   dte_document_version,
-  get_dte_normative,
 } from "./version";
 
 /**
@@ -81,7 +80,9 @@ export const generate_factura = (
   numeroControl?: string,
   codigoGeneracion?: string
 ): SVFE_FC_SEND => {
-  const schemaVersion = dteVersion ?? get_dte_normative();
+  // La normativa 2.0 es la unica; `dteVersion` se acepta pero se ignora.
+  void dteVersion;
+  const schemaVersion = 2;
 
   const fechaHora =
     fecEmi && horEmi ? { fecEmi, horEmi } : getElSalvadorDateTime();
@@ -101,6 +102,27 @@ export const generate_factura = (
     delete (emisor as any).codEstableMH;
     delete (emisor as any).codPuntoVentaMH;
   }
+
+  // Cuando la venta lleva parte no sujeta (pago de prestamo: capital, ahorro
+  // y recargo), el total se compone de gravada + IVA + no sujeta + exenta.
+  // Sin parte no sujeta se conserva el comportamiento historico.
+  // `calc_gravada` ya es la base sin IVA; el IVA real es la diferencia entre
+  // el precio con IVA y esa base (en el pago: 17.35 - 15.35 = 2.00).
+  const gravadaBase = Number(calc_gravada(products).toFixed(2));
+  const totalNoSuj = Number(calc_no_suj(products).toFixed(2));
+  const totalExenta = Number(calc_exenta(products).toFixed(2));
+  const hayNoSujeto = totalNoSuj > 0 || totalExenta > 0;
+  const totalIvaCalc = hayNoSujeto
+    ? Number((Number(total(products).toFixed(2)) - gravadaBase).toFixed(2))
+    : Number(total_iva(products).toFixed(2));
+  const totalOperacion = hayNoSujeto
+    ? Number(
+        (gravadaBase + totalIvaCalc + totalNoSuj + totalExenta).toFixed(2)
+      )
+    : gravadaBase;
+  const subTotalVentas = hayNoSujeto
+    ? Number((gravadaBase + totalNoSuj + totalExenta).toFixed(2))
+    : gravadaBase;
 
   return {
     nit: transmitter.nit,
@@ -140,10 +162,10 @@ export const generate_factura = (
       ventaTercero: null,
       cuerpoDocumento: make_cuerpo_documento_factura(products),
       resumen: {
-        totalNoSuj: Number(calc_no_suj(products).toFixed(2)),
-        totalExenta: Number(calc_exenta(products).toFixed(2)),
-        totalGravada: Number(calc_gravada(products).toFixed(2)),
-        subTotalVentas: Number(calc_gravada(products).toFixed(2)),
+        totalNoSuj,
+        totalExenta,
+        totalGravada: gravadaBase,
+        subTotalVentas,
         descuNoSuj: 0,
         descuExenta: 0,
         descuGravada: 0,
@@ -155,22 +177,14 @@ export const generate_factura = (
         ),
         totalDescu: Number(calDiscount(products).toFixed(2)),
         tributos: null,
-        subTotal: Number(calc_gravada(products).toFixed(2)),
+        subTotal: subTotalVentas,
         ...(schemaVersion >= 2
           ? { ivaRete: Number(ivaRete1.toFixed(2)), observaciones: null }
           : { ivaRete1: Number(ivaRete1.toFixed(2)), reteRenta: 0 }),
-        totalIva: Number(total_iva(products).toFixed(2)),
-        montoTotalOperacion: Number(calc_gravada(products).toFixed(2)),
+        totalIva: totalIvaCalc,
+        montoTotalOperacion: totalOperacion,
         totalNoGravado: Number(calc_no_grav(products).toFixed(2)),
-        totalPagar: Number(
-          (
-            calc_no_grav(products) +
-            calc_exenta(products) +
-            calc_no_suj(products) +
-            calc_gravada(products) -
-            ivaRete1
-          ).toFixed(2)
-        ),
+        totalPagar: Number((totalOperacion - ivaRete1).toFixed(2)),
         totalLetras: convertCurrencyFormat(
           (
             calc_no_grav(products) +
