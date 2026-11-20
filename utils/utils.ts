@@ -6,7 +6,6 @@ import {
   ResponseMHSuccess,
   SendMHFailed,
 } from "../types/svf_dte/global";
-import { get_iva } from "./settings";
 import * as moment from "moment-timezone";
 
 /**
@@ -94,6 +93,14 @@ export const generate_emisor_fse = (
  * The prices are selected based on the value of the "price" field of the product.
  * If the price is one of the base prices, the price is selected.
  * If not, the first non-zero price is selected.
+ *
+ * La factura (01) declara el IVA dentro del precio: `ventaGravada` es el
+ * importe gravado CON IVA, `ivaItem` el IVA que contiene y `precioUni` el total
+ * de la linea. Hacienda valida
+ * `cantidad * precioUni - montoDescu = ventaNoSuj + ventaExenta + ventaGravada`
+ * (codigo 003 "El calculo de total por item es erroneo"), por eso `precioUni`
+ * no puede ser solo la parte gravada cuando el item tambien lleva capital o
+ * ahorro no sujeto (pagos de prestamo).
  * @param {ICartProduct[]} products_cart - The products in the cart.
  * @returns {FC_CuerpoDocumentoItems[]} - An array of FC_CuerpoDocumentoItems.
  */
@@ -114,6 +121,23 @@ export const make_cuerpo_documento_factura = (
         ? Number(prices[1])
         : Number(cp.price);
 
+    const quantity = Number(cp.quantity) || 0;
+    const ventaNoSuj = Number(Number(cp.total_no_suj ?? 0).toFixed(2));
+    const ventaExenta = Number(Number(cp.total_exenta ?? 0).toFixed(2));
+    // Solo se declara venta gravada cuando el producto la tiene; su importe es
+    // el precio (con IVA) por la cantidad.
+    const ventaGravada =
+      Number(cp.total_gravada) > 0
+        ? Number((price * quantity).toFixed(2))
+        : 0;
+    const ivaItem = Number((ventaGravada - ventaGravada / 1.13).toFixed(2));
+    const montoDescu = Number(
+      (Number(cp.monto_descuento ?? 0) * quantity).toFixed(2)
+    );
+    const totalItem = Number(
+      (ventaNoSuj + ventaExenta + ventaGravada).toFixed(2)
+    );
+
     return {
       numItem: index + 1,
       tipoItem: Number(cp.tipoItem),
@@ -123,12 +147,15 @@ export const make_cuerpo_documento_factura = (
       codigo: cp.productCode,
       codTributo: null,
       descripcion: cp.productName,
-      precioUni: Number(price.toFixed(2)),
-      montoDescu: cp.monto_descuento,
-      ventaNoSuj: cp.total_no_suj,
-      ventaExenta: cp.total_exenta,
-      ventaGravada: cp.total_gravada,
-      ivaItem: Number(get_iva(Number(cp.total_gravada), 1).toFixed(2)),
+      precioUni:
+        quantity > 0
+          ? Number(((totalItem + montoDescu) / quantity).toFixed(4))
+          : totalItem,
+      montoDescu,
+      ventaNoSuj,
+      ventaExenta,
+      ventaGravada,
+      ivaItem,
       tributos: null,
       psv: 0,
       noGravado: Number(cp.no_gravado),
