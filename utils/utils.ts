@@ -94,20 +94,21 @@ export const generate_emisor_fse = (
  * If the price is one of the base prices, the price is selected.
  * If not, the first non-zero price is selected.
  *
- * La factura (01) declara el IVA dentro del precio: `ventaGravada` es el
- * importe gravado CON IVA, `ivaItem` el IVA que contiene y `precioUni` el total
- * de la linea. Hacienda valida
- * `cantidad * precioUni - montoDescu = ventaNoSuj + ventaExenta + ventaGravada`
- * (codigo 003 "El calculo de total por item es erroneo"), por eso `precioUni`
- * no puede ser solo la parte gravada cuando el item tambien lleva capital o
- * ahorro no sujeto (pagos de prestamo).
+ * La factura (01) declara el IVA dentro del precio y Hacienda valida que la
+ * clase de venta del item sea igual a `cantidad * precioUni - montoDescu`
+ * (codigo 003 "El valor es diferente a la operacion"). Por eso un item no
+ * puede mezclar venta gravada con no sujeta/exenta: si un producto declara
+ * varias clases, cada una se emite como una linea propia. El resumen se suma
+ * desde estas lineas.
  * @param {ICartProduct[]} products_cart - The products in the cart.
  * @returns {FC_CuerpoDocumentoItems[]} - An array of FC_CuerpoDocumentoItems.
  */
 export const make_cuerpo_documento_factura = (
   products_cart: ICartProduct[]
 ): FC_CuerpoDocumentoItems[] => {
-  return products_cart.map((cp, index) => {
+  const items: FC_CuerpoDocumentoItems[] = [];
+
+  for (const cp of products_cart) {
     const prices = [
       Number(cp.base_price),
       Number(cp.priceA),
@@ -122,45 +123,64 @@ export const make_cuerpo_documento_factura = (
         : Number(cp.price);
 
     const quantity = Number(cp.quantity) || 0;
+    // El descuento es de la linea: se aplica una sola vez (primera clase).
+    const lineDiscount = Number(
+      (Number(cp.monto_descuento ?? 0) * quantity).toFixed(2)
+    );
     const ventaNoSuj = Number(Number(cp.total_no_suj ?? 0).toFixed(2));
     const ventaExenta = Number(Number(cp.total_exenta ?? 0).toFixed(2));
-    // Solo se declara venta gravada cuando el producto la tiene; su importe es
-    // el precio (con IVA) por la cantidad.
+    // La venta gravada de la factura incluye IVA: precio (con IVA) por cantidad.
     const ventaGravada =
       Number(cp.total_gravada) > 0
         ? Number((price * quantity).toFixed(2))
         : 0;
-    const ivaItem = Number((ventaGravada - ventaGravada / 1.13).toFixed(2));
-    const montoDescu = Number(
-      (Number(cp.monto_descuento ?? 0) * quantity).toFixed(2)
-    );
-    const totalItem = Number(
-      (ventaNoSuj + ventaExenta + ventaGravada).toFixed(2)
+
+    const clases = [
+      { ventaNoSuj, ventaExenta: 0, ventaGravada: 0 },
+      { ventaNoSuj: 0, ventaExenta, ventaGravada: 0 },
+      { ventaNoSuj: 0, ventaExenta: 0, ventaGravada },
+    ].filter(
+      (clase) => clase.ventaNoSuj + clase.ventaExenta + clase.ventaGravada > 0
     );
 
-    return {
-      numItem: index + 1,
-      tipoItem: Number(cp.tipoItem),
-      uniMedida: Number(cp.uniMedida),
-      numeroDocumento: null,
-      cantidad: cp.quantity,
-      codigo: cp.productCode,
-      codTributo: null,
-      descripcion: cp.productName,
-      precioUni:
-        quantity > 0
-          ? Number(((totalItem + montoDescu) / quantity).toFixed(4))
-          : totalItem,
-      montoDescu,
-      ventaNoSuj,
-      ventaExenta,
-      ventaGravada,
-      ivaItem,
-      tributos: null,
-      psv: 0,
-      noGravado: Number(cp.no_gravado),
-    };
-  });
+    if (clases.length === 0) {
+      clases.push({ ventaNoSuj: 0, ventaExenta: 0, ventaGravada: 0 });
+    }
+
+    clases.forEach((clase, claseIndex) => {
+      const venta = Number(
+        (clase.ventaNoSuj + clase.ventaExenta + clase.ventaGravada).toFixed(2)
+      );
+      const montoDescu = claseIndex === 0 ? lineDiscount : 0;
+
+      items.push({
+        numItem: items.length + 1,
+        tipoItem: Number(cp.tipoItem),
+        uniMedida: Number(cp.uniMedida),
+        numeroDocumento: null,
+        cantidad: cp.quantity,
+        codigo: cp.productCode,
+        codTributo: null,
+        descripcion: cp.productName,
+        precioUni:
+          quantity > 0
+            ? Number(((venta + montoDescu) / quantity).toFixed(4))
+            : venta,
+        montoDescu,
+        ventaNoSuj: clase.ventaNoSuj,
+        ventaExenta: clase.ventaExenta,
+        ventaGravada: clase.ventaGravada,
+        ivaItem: Number(
+          (clase.ventaGravada - clase.ventaGravada / 1.13).toFixed(2)
+        ),
+        tributos: null,
+        psv: 0,
+        noGravado: claseIndex === 0 ? Number(cp.no_gravado) : 0,
+      });
+    });
+  }
+
+  return items;
 };
 
 /**

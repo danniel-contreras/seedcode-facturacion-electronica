@@ -120,10 +120,14 @@ export const generate_factura = (
   const subTotalVentas = Number(
     (totalNoSuj + totalExenta + totalGravada).toFixed(2)
   );
-  const totalOperacion = Number(
-    (subTotalVentas + totalNoGravado).toFixed(2)
+  // Comportamiento historico (el que el MH acepta para los abonos a cuenta):
+  // `montoTotalOperacion` es la suma de ventas y los cargos/abonos que no
+  // afectan la base (`totalNoGravado`, p. ej. el capital del prestamo) se suman
+  // solo en `totalPagar`.
+  const totalOperacion = subTotalVentas;
+  const totalPagar = Number(
+    (totalOperacion + totalNoGravado - ivaRete1).toFixed(2)
   );
-  const totalPagar = Number((totalOperacion - ivaRete1).toFixed(2));
 
   return {
     nit: transmitter.nit,
